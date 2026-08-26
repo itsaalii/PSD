@@ -4,6 +4,7 @@
 format: jb-book
 root: intro
 chapters:
-- file: markdown
-- file: notebooks
-- file: markdown-notebooks
+- file: view/tugas1/polutan
+  sections:
+  - file: view/tugas1/bussiness-understanding
+  - file: view/tugas1/data-understanding
