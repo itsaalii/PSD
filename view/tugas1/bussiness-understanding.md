@@ -1,2 +1,2 @@
 # Bussiness Understanding
-pada tugas ini
+pada tugas ini saya akan bahas polutan di nganjuk
