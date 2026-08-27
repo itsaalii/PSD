@@ -144,16 +144,6 @@ try:
 except Exception:
     dates = time  # fallback jika tidak ada units
 
-no2_filled = np.zeros_like(no2)
-no2_filled = no2_filled.filled(0)
-
-# Loop tiap grid (y, x)
-for i in range(no2.shape[1]):     # 9 baris
-    for j in range(no2.shape[2]): # 8 kolom
-        series = pd.Series(no2[:, i, j])
-        no2_filled[:, i, j] = series.interpolate(
-            method='linear', limit_direction='both'
-        ).to_numpy()
         
 new_dates = []
 new_no2 = []
@@ -161,7 +151,7 @@ new_no2 = []
 for i in range(len(dates)):
     new_date = dates[i].strftime('%Y-%m-%d')
     new_dates.append(new_date)
-    new_no2.append(np.mean(no2_filled[i]))
+    new_no2.append(np.mean(no2[i]))
 
 df = pd.DataFrame({
     "date": new_dates,
