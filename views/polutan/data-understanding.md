@@ -13,12 +13,12 @@ kernelspec:
 ---
 
 # Data Understanding
-## Collecting Data
+## Data Collection
 Langkah pertama dalam proyek ini adalah mengumpulkan data polutan udara (seperti NO₂, CO, dan SO₂) yang bertipe deret waktu (_Time Series_). Dataset ini diambil dari platform satelit [Copernicus Data Space Ecosystem](https://dataspace.copernicus.eu/).
 
 Buat akun terlebih dahulu di website Copernicus agar bisa melakukan crawling data menggunakan library openEO.
 
-## Install Library
+### Install Library
 
 Untuk melakukan proses crawling data, kita membutuhkan pustaka Python pendukung yaitu `openeo` untuk berkomunikasi dengan API Copernicus, dan `netCDF4` untuk membaca format data cuaca spasial (`.nc`).
 
@@ -26,7 +26,7 @@ Untuk melakukan proses crawling data, kita membutuhkan pustaka Python pendukung 
 pip install openeo
 pip install netCDF4
 ```
-## Data Collection
+
 ### Autentikasi dan Pengambilan Data
 
 Skrip di bawah ini melakukan proses autentikasi untuk menghubungkan sistem lokal kita dengan server Copernicus menggunakan _device code flow_.
