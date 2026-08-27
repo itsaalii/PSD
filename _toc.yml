@@ -4,7 +4,7 @@
 format: jb-book
 root: intro
 chapters:
-- file: view/tugas1/polutan
+- file: views/polutan/polutan
   sections:
-  - file: view/tugas1/bussiness-understanding
-  - file: view/tugas1/data-understanding
+  - file: views/polutan/bussiness-understanding
+  - file: views/polutan/data-understanding
