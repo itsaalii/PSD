@@ -20,11 +20,10 @@ Buat akun terlebih dahulu di website Copernicus agar bisa melakukan crawling dat
 
 ### Install Library
 
-Untuk melakukan proses crawling data, kita membutuhkan pustaka Python pendukung yaitu `openeo` untuk berkomunikasi dengan API Copernicus, dan `netCDF4` untuk membaca format data cuaca spasial (`.nc`).
+Untuk melakukan proses crawling data, kita membutuhkan pustaka Python pendukung yaitu `openeo` untuk berkomunikasi dengan API Copernicus.
 
 ```bash
 pip install openeo
-pip install netCDF4
 ```
 
 ### Autentikasi dan Pengambilan Data
@@ -102,7 +101,7 @@ job.start_and_wait()
 job.get_results().download_files("output_no2")
 ```
 
-Tunggu proses selesai. Status dan progres eksekusi bisa dipantau di [openEO editor](https://editor.openeo.org/?server=https%3A%2F%2Fopeneo.dataspace.copernicus.eu%2Fopeneo%2F1.2). Setelah diproses oleh server, output akan otomatis diunduh berupa file NetCDF **`NO2DiNganjuk.nc`**.
+Tunggu proses selesai. Status dan progres eksekusi bisa dipantau di [openEO editor](https://editor.openeo.org/?server=https%3A%2F%2Fopeneo.dataspace.copernicus.eu%2Fopeneo%2F1.2). Setelah diproses oleh server, output akan otomatis diunduh dalam format **CSV**.
 
 ![Grafik Data](../../img/polutan/editor.png)
 

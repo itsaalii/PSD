@@ -18,7 +18,7 @@ Beberapa permasalahan utama yang ingin dijawab melalui analisis data ini adalah:
 
 ## 3. Tujuan Proyek
 Tujuan dari eksplorasi sains data ini adalah:
-- Mengotomatisasi pengumpulan data citra satelit spasial (NetCDF) dan mentransformasikannya ke dalam dataset tabular (CSV) yang siap dianalisis.
+- Mengotomatisasi pengumpulan data satelit spasial secara langsung ke dalam format tabular (CSV) yang siap dianalisis.
 - Melakukan analisis data eksploratif (EDA) untuk mengidentifikasi perilaku dan tren perubahan gas polutan udara secara temporal.
 - Menyediakan dasar data historis yang kuat untuk keperluan analisis prediktif (_forecasting_) kualitas udara di masa mendatang.
 
