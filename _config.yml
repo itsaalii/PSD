@@ -1,7 +1,7 @@
 # Book settings
 # Learn more at https://jupyterbook.org/customize/config.html
 
-title: Proyek Sains Data
+title: Proyek Sain Data
 author: Muhammad Ali Murtadho
 logo: logo.png
 
@@ -31,3 +31,7 @@ html:
   use_issues_button: true
   use_repository_button: true
 
+sphinx:
+  config:
+    html_css_files:
+      - custom.css
