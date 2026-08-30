@@ -404,6 +404,13 @@ Implementasi pada tools `Orange Data Mining`
 :alt: Grafik Data
 :width: 100%
 :align: center
+:class: mabot-gambar
+```
+
+```{image} ../../img/polutan/sp_co.png
+:alt: Grafik Data
+:width: 100%
+:align: center
 ```
 
 2. SO₂
@@ -426,6 +433,13 @@ print("Jumlah outlier:", jumlah_outlier)
 Implementasi pada tools `Orange Data Mining`
 
 ```{image} ../../img/polutan/so2_outliers.png
+:alt: Grafik Data
+:width: 100%
+:align: center
+:class: mabot-gambar
+```
+
+```{image} ../../img/polutan/sp_so2.png
 :alt: Grafik Data
 :width: 100%
 :align: center
@@ -454,8 +468,14 @@ Implementasi pada tools `Orange Data Mining`
 :alt: Grafik Data
 :width: 100%
 :align: center
+:class: mabot-gambar
 ```
 
+```{image} ../../img/polutan/sp_no2.png
+:alt: Grafik Data
+:width: 100%
+:align: center
+```
 4. O₃
 
 ```{code-cell}
@@ -479,4 +499,42 @@ Implementasi pada tools `Orange Data Mining`
 :alt: Grafik Data
 :width: 100%
 :align: center
+:class: mabot-gambar
+```
+
+```{image} ../../img/polutan/sp_o3.png
+:alt: Grafik Data
+:width: 100%
+:align: center
+```
+
+## Menggabungkan File CSV
+
+Setelah setiap dataset polutan (O₃, CO, NO₂, dan SO₂) dinormalisasi dan dianalisis nilai kosong serta pencilan (outliers)-nya, langkah selanjutnya adalah menggabungkan keempat file tersebut menjadi satu dataset terpadu. Karena keempat data tersebut direkam dengan rentang waktu harian yang sama, kita dapat menggabungkannya berdasarkan kolom tanggal (`date`). Penggabungan ini akan mempermudah proses analisis multivariat dan pemodelan pada tahap selanjutnya, karena seluruh fitur parameter polutan udara kini berada dalam satu tabel yang terpusat.
+
+Berikut adalah kode Python menggunakan pustaka Pandas untuk menyatukan keempat dataset tersebut dan menyimpannya ke dalam file baru bernama `Polutan_Nganjuk.csv`:
+
+```python
+import pandas as pd
+
+df_o3 = pd.read_csv("O3_Timeseries.csv")
+df_co = pd.read_csv("CO_Timeseries.csv")
+df_no2 = pd.read_csv("NO2_Timeseries.csv")
+df_so2 = pd.read_csv("SO2_Timeseries.csv")
+
+dataframe_merged = pd.DataFrame({
+    "date": df_o3['date'],
+    "O3": df_o3['O3'],
+    "CO": df_co['CO'],
+    "NO2": df_no2['NO2'],
+    "SO2": df_so2['SO2']
+})
+
+dataframe_merged.to_csv("Polutan_Nganjuk.csv", index=False)
+```
+
+```{code-cell}
+:tags: [hide-input]
+df = pd.read_csv("../../data/polutan/Polutan_Nganjuk.csv")
+df.head(5)
 ```
