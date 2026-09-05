@@ -207,7 +207,7 @@ $$
    \\
    B &= \sum_{i=1}^{n}\left(\frac{x_i-\bar{x}}{s}\right)^3\\
    \\
-   B &= \left(\frac{0.02244 - 0.029558}{0.00349}\right)^3 + \left(\frac{0.02976 - 0.029558}{0.00349}\right)^3 + ... + \left(\frac{x_n - 0.029558}{0.00349}\right)^3\\
+   B &= \left(\frac{0.02244 - 0.029558}{0.00349}\right)^3 + \left(\frac{0.02976 - 0.029558}{0.00349}\right)^3 + \ldots + \left(\frac{x_n - 0.029558}{0.00349}\right)^3\\
    \\
    B &= 85.0339383\\
    \\
@@ -233,7 +233,7 @@ A &= 0.003496 \\
 \\
 B &= \sum_{i=1}^{n}\left(\frac{x_i-\bar{x}}{s}\right)^4\\
 \\
-B &= \left(\frac{0.02244 - 0.029558}{0.00349}\right)^4 + \left(\frac{0.02976 - 0.029558}{0.00349}\right)^4 + ... + \left(\frac{x_n - 0.029558}{0.00349}\right)^4\\
+B &= \left(\frac{0.02244 - 0.029558}{0.00349}\right)^4 + \left(\frac{0.02976 - 0.029558}{0.00349}\right)^4 + \ldots + \left(\frac{x_n - 0.029558}{0.00349}\right)^4\\
 \\
 B &= 1008.297\\
 \\
@@ -248,4 +248,15 @@ C &= 3.03107\\
 Kurtosis &= 0.003496 \times 1008.297 - 3.03107\\
 \\
 Kurtosis &= 0.493936312
+$$
+
+4. Overall Sum
+Overall Sum jumlah keseluruhan atau total dari seluruh nilai angka dalam suatu kumpulan data
+
+$$
+OS &= \sum_{i=1}^{n}x_i \\
+\\
+OS &= 0.024863595 + 0.030086365 + 0.024034256 + \ldots + x_n \\
+\\
+OS &= 8.660438
 $$
