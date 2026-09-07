@@ -151,6 +151,18 @@ Setelah data berhasil dimuat ke dalam KNIME, tahapan yang terakhir adalah menjal
 
 ![Tabel Hasil Output Node Statistics](../../img/polutan/statistic.png)
 
+### Penjelasan
+1. O3 (Ozon)
+Nilai O3 berkisar antara 0,11 hingga 0,123, dengan rata-rata (mean) 0,116 dan median yang hampir identik (0,116). Standar deviasi sangat kecil (0,002), menunjukkan sebaran data yang sempit dan konsisten. Skewness positif (0,442) mengindikasikan sedikit kemencengan ke kanan, namun kurtosis rendah (0,066) menunjukkan distribusi yang relatif datar (platikurtik) dibanding distribusi normal. Data ini memiliki 6 nilai yang hilang (missing).
+
+2. CO (Karbon Monoksida)
+CO memiliki rentang nilai 0,02–0,043, dengan mean dan median yang sama (0,03), menandakan distribusi yang cukup simetris. Standar deviasi 0,003 relatif kecil terhadap rata-ratanya. Skewness 0,293 menunjukkan kemencengan ringan ke kanan, dengan kurtosis 0,494 yang juga relatif datar. Variabel ini memiliki data hilang terbanyak kedua, yaitu 73 nilai.
+
+3. NO2 (Nitrogen Dioksida)
+NO2 menunjukkan nilai yang sangat kecil dan mendekati nol pada semua ukuran (min, max, mean, median dibulatkan menjadi 0), dengan variansi yang sangat kecil (8,1 × 10⁻¹¹). Meski begitu, skewness (1,447) dan kurtosis (6,678) jauh lebih tinggi dibanding variabel lain, menandakan distribusi yang sangat menceng ke kanan dan memiliki ekor panjang (leptokurtik) — kemungkinan terdapat beberapa nilai ekstrem (outlier) di antara nilai-nilai yang umumnya sangat kecil. NO2 juga memiliki jumlah data hilang tertinggi, yaitu 96 nilai — hampir seperempat dari total data.
+
+4. SO2 (Sulfur Dioksida)
+SO2 memiliki rentang nilai yang mencakup angka negatif (-0,001 hingga 0,001), dengan mean dan median mendekati nol. Skewness sebesar 0,554 dan kurtosis 1,997 menunjukkan distribusi menceng ke kanan dengan ekor yang lebih tebal dibanding distribusi normal, meskipun tidak seekstrem NO2. Variabel ini memiliki 57 nilai hilang.
 ### Perhitungan Manual
 
 Perhitungan manual dibawah ini, saya memberikan contoh pada kolom `CO`
