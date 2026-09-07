@@ -268,7 +268,8 @@ Kurtosis &= 0.493936312
 $$
 
 4. Overall Sum
-Overall Sum jumlah keseluruhan atau total dari seluruh nilai angka dalam suatu kumpulan data
+
+Overall Sum merupakan jumlah keseluruhan atau total dari seluruh nilai angka dalam suatu kumpulan data
 
 $$
 OS &= \sum_{i=1}^{n}x_i \\
