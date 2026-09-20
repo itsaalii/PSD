@@ -69,10 +69,21 @@ Pada bagian ini, evaluasi pembentukan klaster (diukur menggunakan rata-rata *Sil
 
 ### 1. Klastering 3 Kelas (Tanpa PCA)
 *Tabel Silhouette Coefficient untuk k=3 tanpa PCA:*
-![Workflow K-Means Clustering](../../img/polutan-baron/mean-3.png)
+
+```{image} ../../img/polutan-baron/mean-3.png
+:alt: Workflow K-Means Clustering
+:width: 100%
+:align: center
+:class: mabot-gambar
+```
 
 *Visualisasi Scatter Plot untuk k=3 tanpa PCA:*
-![Workflow K-Means Clustering](../../img/polutan-baron/sct-3.png)
+```{image} ../../img/polutan-baron/sct-3.png
+:alt: Workflow K-Means Clustering
+:width: 100%
+:align: center
+:class: mabot-gambar
+```
 
 *Implementasi code python:*
 
@@ -140,11 +151,24 @@ plt.show()
 ```
 
 ### 2. Klastering 5 Kelas (Tanpa PCA)
+
 *Tabel Silhouette Coefficient untuk k=5 tanpa PCA:*
-![Workflow K-Means Clustering](../../img/polutan-baron/mean-5.png)
+
+```{image} ../../img/polutan-baron/mean-5.png
+:alt: Workflow K-Means Clustering
+:width: 100%
+:align: center
+:class: mabot-gambar
+```
 
 *Visualisasi Scatter Plot untuk k=5 tanpa PCA:*
-![Workflow K-Means Clustering](../../img/polutan-baron/sct-5.png)
+
+```{image} ../../img/polutan-baron/sct-5.png
+:alt: Workflow K-Means Clustering
+:width: 100%
+:align: center
+:class: mabot-gambar
+```
 
 *Implementasi code python:*
 ```{code-cell}
@@ -210,11 +234,24 @@ plt.show()
 
 ```
 ### 3. Klastering 3 Kelas (Dengan PCA)
+
 *Tabel Silhouette Coefficient untuk k=3 dengan PCA:*
-![Workflow K-Means Clustering](../../img/polutan-baron/mean-3-pca.png)
+
+```{image} ../../img/polutan-baron/mean-3-pca.png
+:alt: Workflow K-Means Clustering
+:width: 100%
+:align: center
+:class: mabot-gambar
+```
 
 *Visualisasi Scatter Plot untuk k=3 dengan PCA:*
-![Workflow K-Means Clustering](../../img/polutan-baron/sct-3-pca.png)
+
+```{image} ../../img/polutan-baron/sct-3-pca.png
+:alt: Workflow K-Means Clustering
+:width: 100%
+:align: center
+:class: mabot-gambar
+```
 
 *Implementasi code python:*
 
@@ -293,11 +330,24 @@ plt.show()
 ```
 
 ### 4. Klastering 5 Kelas (Dengan PCA)
+
 *Tabel Silhouette Coefficient untuk k=5 dengan PCA:*
-![Workflow K-Means Clustering](../../img/polutan-baron/mean-5-pca.png)
+
+```{image} ../../img/polutan-baron/mean-5-pca.png
+:alt: Workflow K-Means Clustering
+:width: 100%
+:align: center
+:class: mabot-gambar
+```
 
 *Visualisasi Scatter Plot untuk k=5 dengan PCA:*
-![Workflow K-Means Clustering](../../img/polutan-baron/sct-5-pca.png)
+
+```{image} ../../img/polutan-baron/sct-5-pca.png
+:alt: Workflow K-Means Clustering
+:width: 100%
+:align: center
+:class: mabot-gambar
+```
 
 *Implementasi code Python:*
 
