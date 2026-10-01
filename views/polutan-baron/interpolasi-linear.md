@@ -12,13 +12,18 @@ kernelspec:
   name: python3
 ---
 
-# Data Preprocessing dan Ekstraksi Fitur
+# Data Preprocessing dan Ekstraksi Fitur (Interpolasi Linear)
 
-## Preprocessing: Penanganan Outliers dan Interpolasi
+## Preprocessing: Penanganan Outliers dan Interpolasi Linear
 
-Pada tahap _Data Understanding_, kita telah mengidentifikasi adanya kemungkinan nilai _outliers_ pada deret waktu. Untuk menangani permasalahan ini dan mempersiapkan data agar bisa diekstrak fiturnya secara mulus, kita menerapkan pembersihan data menggunakan metode Rentang Interkuartil (IQR) dan mengisi (imputasi) kekosongan data menggunakan **interpolasi linier**.
+Pada tahap _Data Understanding_, kita telah mengidentifikasi adanya kemungkinan nilai _outliers_ pada deret waktu. Untuk menangani permasalahan ini dan mempersiapkan data agar bisa diekstrak fiturnya secara mulus, kita menerapkan pembersihan data secara **iteratif** menggunakan metode Rentang Interkuartil (IQR) dan mengisi (imputasi) kekosongan data menggunakan **interpolasi linier**. 
 
-Di akhir proses imputasi, teknik _backward fill_ (`bfill`) serta _forward fill_ (`ffill`) dimanfaatkan guna mengatasi nilai kosong pada bagian pinggir atau awalan dan akhiran rangkaian data yang tidak bisa diinterpolasi secara linier.
+**Mengapa Interpolasi Linier?**
+Interpolasi linier sangat cocok untuk data deret waktu polutan udara karena metode ini bekerja dengan menarik "garis lurus" matematis untuk memperkirakan nilai yang hilang berdasarkan dua titik observasi terdekat yang valid (titik data sebelum dan titik sesudahnya). Melalui fungsi bawaan pandas (seperti `interpolate(method='linear')` maupun `method='time'`), kekosongan data akibat penghapusan _outlier_ dapat diisi secara proporsional dengan mengasumsikan perubahan konstan pada jarak waktu yang kosong. Hal ini efektif untuk menjaga keberlanjutan (_continuity_) tren temporal tanpa menghasilkan anomali baru pada sebaran data harian.
+
+Proses deteksi outlier dan imputasi linier ini dijalankan secara berulang (dalam blok _loop_) hingga distribusi benar-benar bersih. Langkah iteratif ini diperlukan karena nilai baru dari hasil interpolasi terkadang dapat sedikit menggeser batas atas/bawah perhitungan IQR, sehingga deteksi tambahan dipastikan berjalan tuntas.
+
+Di akhir proses imputasi, teknik _backward fill_ (`bfill`) serta _forward fill_ (`ffill`) dimanfaatkan guna mengatasi nilai kosong pada bagian pinggir atau awalan dan akhiran rangkaian data yang tidak bisa diinterpolasi secara linier karena tidak diapit oleh dua titik.
 
 Berikut adalah tahapan deteksi outlier, imputasi, dan penyimpanan dataset untuk masing-masing polutan udara:
 
@@ -76,16 +81,69 @@ plt.show()
 Penanganan outlier dan pengisian nilai yang hilang untuk **CO**:
 
 ```python
-# Tandai outlier menjadi NaN
-df['CO_cleaned'] = df['CO'].mask((df['CO'] < lower_bound) | (df['CO'] > upper_bound))
+df['CO_filled'] = df['CO'].copy()
 
-# Lakukan interpolasi linier pada NaN yang sudah dibuat
-df['CO_filled'] = df['CO_cleaned'].interpolate(method='linear').bfill().ffill()
+# Looping iteratif untuk membersihkan outlier sampai benar-benar habis
+while True:
+    # 1. Hitung ulang kuartil dan batas IQR berdasarkan data saat ini
+    Q1 = df['CO_filled'].quantile(0.25)
+    Q3 = df['CO_filled'].quantile(0.75)
+    IQR = Q3 - Q1
+    
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    
+    # 2. Deteksi lokasi outlier
+    outliers = (df['CO_filled'] < lower_bound) | (df['CO_filled'] > upper_bound)
+    
+    # Jika sudah tidak ada outlier yang terdeteksi, hentikan perulangan
+    if not outliers.any():
+        break
+    
+    # 3. Mask nilai outlier menjadi NaN, lalu isi dengan interpolasi linier + bfill + ffill
+    df['CO_filled'] = df['CO_filled'].mask(outliers)
+    df['CO_filled'] = df['CO_filled'].interpolate(method='linear').bfill().ffill()
 
-# Simpan data yang telah dibersihkan dan diinterpolasi ke file CSV baru
+# 4. Simpan hasil akhir ke DataFrame baru dan ekspor ke CSV
 df_co = pd.DataFrame({"date": df['date'], "CO": df['CO_filled']})
 df_co.to_csv("../../data/polutan-baron/CO_filed.csv", index=False)
 print("Data CO berhasil diproses dan disimpan ke CO_filed.csv")
+```
+
+Visualisasi data CO setelah proses interpolasi (memastikan sudah tidak ada outlier):
+
+```{code-cell}
+df_co_final = pd.read_csv("../../data/polutan-baron/CO_filed.csv")
+df_co_final['date'] = pd.to_datetime(df_co_final['date'])
+
+Q1 = df_co_final['CO'].quantile(0.25)
+Q3 = df_co_final['CO'].quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+outliers_iqr = df_co_final[(df_co_final['CO'] < lower_bound) | (df_co_final['CO'] > upper_bound)]
+
+plt.figure(figsize=(15,5))
+plt.plot(df_co_final['date'], df_co_final['CO'], label="CO", linewidth=1)
+
+plt.scatter(outliers_iqr['date'], outliers_iqr['CO'],
+            color='red', marker='o', label="Outliers")
+
+plt.axhline(upper_bound, color='orange', linestyle='dashed', label="Upper Bound (IQR)")
+plt.axhline(lower_bound, color='blue',   linestyle='dashed', label="Lower Bound (IQR)")
+
+plt.title("Visualisasi Data CO Setelah Interpolasi")
+plt.xlabel("Tanggal")
+plt.ylabel("Kadar CO")
+plt.legend()
+plt.tight_layout()
+plt.xticks(
+    ticks=[df_co_final['date'].iloc[0], df_co_final['date'].iloc[-1]],
+    labels=[df_co_final['date'].iloc[0].strftime('%Y-%m-%d'),
+            df_co_final['date'].iloc[-1].strftime('%Y-%m-%d')]
+)
+plt.show()
 ```
 
 ### 2. Sulfur Dioksida (SO2)
@@ -142,16 +200,69 @@ plt.show()
 Penanganan outlier dan pengisian nilai yang hilang untuk **SO2**:
 
 ```python
-# Tandai outlier menjadi NaN
-df['SO2_cleaned'] = df['SO2'].mask((df['SO2'] < lower_bound) | (df['SO2'] > upper_bound))
+df['SO2_filled'] = df['SO2'].copy()
 
-# Lakukan interpolasi linier pada NaN yang sudah dibuat
-df['SO2_filled'] = df['SO2_cleaned'].interpolate(method='linear').bfill().ffill()
+# Looping iteratif untuk membersihkan outlier sampai benar-benar habis
+while True:
+    # 1. Hitung ulang kuartil dan batas IQR berdasarkan data saat ini
+    Q1 = df['SO2_filled'].quantile(0.25)
+    Q3 = df['SO2_filled'].quantile(0.75)
+    IQR = Q3 - Q1
+    
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    
+    # 2. Deteksi lokasi outlier
+    outliers = (df['SO2_filled'] < lower_bound) | (df['SO2_filled'] > upper_bound)
+    
+    # Jika sudah tidak ada outlier yang terdeteksi, hentikan perulangan
+    if not outliers.any():
+        break
+    
+    # 3. Mask nilai outlier menjadi NaN, lalu isi dengan interpolasi linier + bfill + ffill
+    df['SO2_filled'] = df['SO2_filled'].mask(outliers)
+    df['SO2_filled'] = df['SO2_filled'].interpolate(method='linear').bfill().ffill()
 
-# Simpan data yang telah dibersihkan dan diinterpolasi ke file CSV baru
+# 4. Simpan hasil akhir ke DataFrame baru dan ekspor ke CSV
 df_so2 = pd.DataFrame({"date": df['date'], "SO2": df['SO2_filled']})
 df_so2.to_csv("../../data/polutan-baron/SO2_filed.csv", index=False)
 print("Data SO2 berhasil diproses dan disimpan ke SO2_filed.csv")
+```
+
+Visualisasi data SO2 setelah proses interpolasi (memastikan sudah tidak ada outlier):
+
+```{code-cell}
+df_so2_final = pd.read_csv("../../data/polutan-baron/SO2_filed.csv")
+df_so2_final['date'] = pd.to_datetime(df_so2_final['date'])
+
+Q1 = df_so2_final['SO2'].quantile(0.25)
+Q3 = df_so2_final['SO2'].quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+outliers_iqr = df_so2_final[(df_so2_final['SO2'] < lower_bound) | (df_so2_final['SO2'] > upper_bound)]
+
+plt.figure(figsize=(15,5))
+plt.plot(df_so2_final['date'], df_so2_final['SO2'], label="SO2", linewidth=1)
+
+plt.scatter(outliers_iqr['date'], outliers_iqr['SO2'],
+            color='red', marker='o', label="Outliers")
+
+plt.axhline(upper_bound, color='orange', linestyle='dashed', label="Upper Bound (IQR)")
+plt.axhline(lower_bound, color='blue',   linestyle='dashed', label="Lower Bound (IQR)")
+
+plt.title("Visualisasi Data SO2 Setelah Interpolasi")
+plt.xlabel("Tanggal")
+plt.ylabel("Kadar SO2")
+plt.legend()
+plt.tight_layout()
+plt.xticks(
+    ticks=[df_so2_final['date'].iloc[0], df_so2_final['date'].iloc[-1]],
+    labels=[df_so2_final['date'].iloc[0].strftime('%Y-%m-%d'),
+            df_so2_final['date'].iloc[-1].strftime('%Y-%m-%d')]
+)
+plt.show()
 ```
 
 ### 3. Nitrogen Dioksida (NO2)
@@ -208,16 +319,69 @@ plt.show()
 Penanganan outlier dan pengisian nilai yang hilang untuk **NO2**:
 
 ```python
-# Tandai outlier menjadi NaN
-df['NO2_cleaned'] = df['NO2'].mask((df['NO2'] < lower_bound) | (df['NO2'] > upper_bound))
+df['NO2_filled'] = df['NO2'].copy()
 
-# Lakukan interpolasi linier pada NaN yang sudah dibuat
-df['NO2_filled'] = df['NO2_cleaned'].interpolate(method='linear').bfill().ffill()
+# Looping iteratif untuk membersihkan outlier sampai benar-benar habis
+while True:
+    # 1. Hitung ulang kuartil dan batas IQR berdasarkan data saat ini
+    Q1 = df['NO2_filled'].quantile(0.25)
+    Q3 = df['NO2_filled'].quantile(0.75)
+    IQR = Q3 - Q1
+    
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    
+    # 2. Deteksi lokasi outlier
+    outliers = (df['NO2_filled'] < lower_bound) | (df['NO2_filled'] > upper_bound)
+    
+    # Jika sudah tidak ada outlier yang terdeteksi, hentikan perulangan
+    if not outliers.any():
+        break
+    
+    # 3. Mask nilai outlier menjadi NaN, lalu isi dengan interpolasi linier + bfill + ffill
+    df['NO2_filled'] = df['NO2_filled'].mask(outliers)
+    df['NO2_filled'] = df['NO2_filled'].interpolate(method='linear').bfill().ffill()
 
-# Simpan data yang telah dibersihkan dan diinterpolasi ke file CSV baru
+# 4. Simpan hasil akhir ke DataFrame baru dan ekspor ke CSV
 df_no2 = pd.DataFrame({"date": df['date'], "NO2": df['NO2_filled']})
 df_no2.to_csv("../../data/polutan-baron/NO2_filed.csv", index=False)
 print("Data NO2 berhasil diproses dan disimpan ke NO2_filed.csv")
+```
+
+Visualisasi data NO2 setelah proses interpolasi (memastikan sudah tidak ada outlier):
+
+```{code-cell}
+df_no2_final = pd.read_csv("../../data/polutan-baron/NO2_filed.csv")
+df_no2_final['date'] = pd.to_datetime(df_no2_final['date'])
+
+Q1 = df_no2_final['NO2'].quantile(0.25)
+Q3 = df_no2_final['NO2'].quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+outliers_iqr = df_no2_final[(df_no2_final['NO2'] < lower_bound) | (df_no2_final['NO2'] > upper_bound)]
+
+plt.figure(figsize=(15,5))
+plt.plot(df_no2_final['date'], df_no2_final['NO2'], label="NO2", linewidth=1)
+
+plt.scatter(outliers_iqr['date'], outliers_iqr['NO2'],
+            color='red', marker='o', label="Outliers")
+
+plt.axhline(upper_bound, color='orange', linestyle='dashed', label="Upper Bound (IQR)")
+plt.axhline(lower_bound, color='blue',   linestyle='dashed', label="Lower Bound (IQR)")
+
+plt.title("Visualisasi Data NO2 Setelah Interpolasi")
+plt.xlabel("Tanggal")
+plt.ylabel("Kadar NO2")
+plt.legend()
+plt.tight_layout()
+plt.xticks(
+    ticks=[df_no2_final['date'].iloc[0], df_no2_final['date'].iloc[-1]],
+    labels=[df_no2_final['date'].iloc[0].strftime('%Y-%m-%d'),
+            df_no2_final['date'].iloc[-1].strftime('%Y-%m-%d')]
+)
+plt.show()
 ```
 
 ### 4. Visualisasi Gabungan Setelah Preprocessing
@@ -297,30 +461,53 @@ plt.tight_layout()
 plt.show()
 ```
 
+### 5. Penggabungan Data Polutan
+
+Sebelum melakukan ekstraksi fitur, ada baiknya seluruh data polutan udara digabungkan ke dalam satu file dataset tunggal (`Polutan_Baron_linear.csv`). Hal ini akan memudahkan proses iterasi dan menghindari duplikasi kolom tanggal saat fitur diekstraksi sekaligus.
+
+```{code-cell}
+import pandas as pd
+
+# Memuat data yang telah diproses
+df_co = pd.read_csv("../../data/polutan-baron/CO_filed.csv")
+df_no2 = pd.read_csv("../../data/polutan-baron/NO2_filed.csv")
+df_so2 = pd.read_csv("../../data/polutan-baron/SO2_filed.csv")
+
+dataframe_merged = pd.DataFrame({
+    "date": df_no2['date'],
+    "CO": df_co['CO'],
+    "NO2": df_no2['NO2'],
+    "SO2": df_so2['SO2']
+})
+
+dataframe_merged.to_csv("../../data/polutan-baron/Polutan_Baron_linear.csv", index=False)
+print("Data polutan berhasil digabungkan dan disimpan ke Polutan_Baron_linear.csv")
+```
+
 ## Ekstraksi Fitur Deret Waktu (Time Series)
 
 Dengan data deret waktu polutan udara yang konsisten (tanpa tanggal hilang dan tanpa _outlier_), kita dapat melangkah ke ekstraksi berbagai fitur statistik, temporal, maupun spektral. Fitur-fitur ini sangat berguna sebagai parameter *input* yang merepresentasikan karakteristik *trend* harian polutan ke dalam model _machine learning_ maupun _deep learning_.
 
-Kita akan memanfaatkan modul pustaka Python bernama `tsfel` (_Time Series Feature Extraction Library_) guna mempermudah proses komputasi serta standarisasi ragam tipe fitur. Untuk memastikan hasil ekstraksi mudah dibaca, format akhir data CSV akan di-*transpose* sehingga struktur tabel menjadi format dua kolom, yakni *Feature* dan *Value*.
+Kita akan memanfaatkan modul pustaka Python bernama `tsfel` (_Time Series Feature Extraction Library_) guna mempermudah proses komputasi serta standarisasi ragam tipe fitur. Ekstraksi dilakukan secara *looping* untuk seluruh polutan yang ada di dalam dataset gabungan (`Polutan_Baron_linear.csv`). 
 
-### 1. Karbon Monoksida (CO)
+Untuk memastikan hasil ekstraksi bersih dan aman dari error, pada setiap iterasi polutan data akan kembali difilter dari outlier dan diinterpolasi ulang menggunakan metode `time` sebelum dilakukan komputasi fitur. Seluruh fitur dari ketiga polutan (3 × 68 = 204 fitur) kemudian digabung dalam satu baris.
 
-```python
+```{code-cell}
 import pandas as pd
 import numpy as np
 import inspect
 import tsfel.feature_extraction.features as tsfel_features
 
-# ---------- 1. Muat data yang sudah dibersihkan ----------
-df = pd.read_csv('../../data/polutan-baron/CO_filed.csv')
+# ---------- 1. Muat 1 file CSV utama yang berisi semua polutan ----------
+df = pd.read_csv('../../data/polutan-baron/Polutan_Baron_linear.csv')
+
 df['date'] = pd.to_datetime(df['date'])
 df = df.sort_values('date').reset_index(drop=True)
 
-target_pollutant = 'CO'
+pollutants = ['NO2', 'SO2', 'CO']
 fs = 1
-signal_1d = df[target_pollutant].astype(float).values
 
-# ---------- 2. Inisiasi Daftar Fitur TSFEL ----------
+# ---------- 2. Daftar 68 Fitur TSFEL ----------
 FEATURE_LIST = """abs_energy auc autocorr average_power calc_centroid calc_max calc_mean
 calc_median calc_min calc_std calc_var dfa distance ecdf ecdf_percentile ecdf_percentile_count
 ecdf_slope entropy fundamental_frequency higuchi_fractal_dimension hist_mode human_range_energy
@@ -332,6 +519,9 @@ spectral_centroid spectral_decrease spectral_distance spectral_entropy spectral_
 spectral_positive_turning spectral_roll_off spectral_roll_on spectral_skewness spectral_slope
 spectral_spread spectral_variation spectrogram_mean_coeff sum_abs_diff wavelet_abs_mean
 wavelet_energy wavelet_entropy wavelet_std wavelet_var zero_cross""".split()
+
+print(f"Jumlah fitur per polutan: {len(FEATURE_LIST)}")
+print(f"Total target fitur keseluruhan: {len(FEATURE_LIST) * len(pollutants)}")
 
 # ---------- 3. Fungsi ekstraksi dan penyeragaman output  ----------
 def to_scalar(result):
@@ -351,96 +541,53 @@ def extract_one(fn_name, signal, fs):
         result = fn(signal)
     return to_scalar(result)
 
-# Lakukan ekstraksi iteratif pada fitur
-row = {}
-for fn_name in FEATURE_LIST:
-    row[fn_name] = extract_one(fn_name, signal_1d, fs)
+# Dictionary untuk menampung seluruh hasil ekstraksi
+combined_row = {}
 
-extracted_features_final = pd.DataFrame([row])
-# Export hasil ke file CSV
-extracted_features_final.to_csv(f'../../data/polutan-baron/{target_pollutant}_Baron_TSFEL.csv', index=False)
-print(f"Berhasil mengekstrak {len(FEATURE_LIST)} fitur untuk {target_pollutant}.")
+# ---------- 4. Looping untuk membersihkan dan mengekstraksi tiap polutan ----------
+for pollutant in pollutants:
+    print(f"\n--- Memproses polutan: {pollutant} ---")
+    
+    df_poly = df[['date', pollutant]].copy()
+    df_poly[pollutant] = pd.to_numeric(df_poly[pollutant], errors='coerce')
+
+    # Handling outlier dengan IQR (sebagai safeguard tambahan)
+    Q1 = df_poly[pollutant].quantile(0.25)
+    Q3 = df_poly[pollutant].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    df_poly.loc[(df_poly[pollutant] < lower_bound) | (df_poly[pollutant] > upper_bound), pollutant] = np.nan
+
+    # Interpolasi waktu dan cleaning
+    df_clean = df_poly.set_index('date').interpolate(method='time').ffill().bfill()
+    signal_1d = df_clean[pollutant].astype(float).values
+
+    # Ekstraksi fitur dan beri prefix nama polutan (misal: NO2_abs_energy)
+    for fn_name in FEATURE_LIST:
+        feature_key = f"{pollutant}_{fn_name}"
+        combined_row[feature_key] = extract_one(fn_name, signal_1d, fs)
+
+# ---------- 5. Simpan ke DataFrame final ----------
+extracted_features_final = pd.DataFrame([combined_row])
+print(f"\nBerhasil! Total kolom akhir yang dihasilkan: {extracted_features_final.shape[1]}")
+
+output_filename = '../../data/polutan-baron/Baron_Linear.csv'
+extracted_features_final.to_csv(output_filename, index=False)
+print(f"File berhasil disimpan sebagai: {output_filename}")
 ```
 
-Contoh cuplikan hasil ekstraksi fitur **CO**:
+Contoh cuplikan hasil ekstraksi fitur gabungan (204 kolom):
 
 ```{code-cell}
 :tags: [hide-input]
-df_feat = pd.read_csv("../../data/polutan-baron/CO_Baron_TSFEL.csv")
-df_feat.head(10)
-```
-
-### 2. Sulfur Dioksida (SO2)
-
-```python
-import pandas as pd
-import numpy as np
-import inspect
-import tsfel.feature_extraction.features as tsfel_features
-
-df = pd.read_csv('../../data/polutan-baron/SO2_filed.csv')
-df['date'] = pd.to_datetime(df['date'])
-df = df.sort_values('date').reset_index(drop=True)
-
-target_pollutant = 'SO2'
-fs = 1
-signal_1d = df[target_pollutant].astype(float).values
-
-# Daftar fitur dan fungsi ekstraksi (disembunyikan untuk ringkasnya karena sama seperti di atas)
-# row = {}
-# for fn_name in FEATURE_LIST:
-#    row[fn_name] = extract_one(fn_name, signal_1d, fs)
-
-extracted_features_final = pd.DataFrame([row])
-extracted_features_final.to_csv(f'../../data/polutan-baron/{target_pollutant}_Baron_TSFEL.csv', index=False)
-print(f"Berhasil mengekstrak fitur untuk {target_pollutant}.")
-```
-
-Contoh cuplikan hasil ekstraksi fitur **SO2**:
-
-```{code-cell}
-:tags: [hide-input]
-df_feat = pd.read_csv("../../data/polutan-baron/SO2_Baron_TSFEL.csv")
-df_feat.head(10)
-```
-
-### 3. Nitrogen Dioksida (NO2)
-
-```python
-import pandas as pd
-import numpy as np
-import inspect
-import tsfel.feature_extraction.features as tsfel_features
-
-df = pd.read_csv('../../data/polutan-baron/NO2_filed.csv')
-df['date'] = pd.to_datetime(df['date'])
-df = df.sort_values('date').reset_index(drop=True)
-
-target_pollutant = 'NO2'
-fs = 1
-signal_1d = df[target_pollutant].astype(float).values
-
-# Daftar fitur dan fungsi ekstraksi (disembunyikan untuk ringkasnya karena sama seperti di atas)
-# row = {}
-# for fn_name in FEATURE_LIST:
-#    row[fn_name] = extract_one(fn_name, signal_1d, fs)
-
-extracted_features_final = pd.DataFrame([row])
-extracted_features_final.to_csv(f'../../data/polutan-baron/{target_pollutant}_Baron_TSFEL.csv', index=False)
-print(f"Berhasil mengekstrak fitur untuk {target_pollutant}.")
-```
-
-Contoh cuplikan hasil ekstraksi fitur **NO2**:
-
-```{code-cell}
-:tags: [hide-input]
-df_feat = pd.read_csv("../../data/polutan-baron/NO2_Baron_TSFEL.csv")
-df_feat.head(10)
+df_feat = pd.read_csv("../../data/polutan-baron/Baron_Linear.csv")
+df_feat.head()
 ```
 
 ## Penjelasan Domain TSFEL
 
-Pustaka TSFEL membagi 68 fitur deret waktu menjadi tiga domain utama: **Statistik (Statistical)**, **Waktu (Temporal)**, dan **Frekuensi (Spectral)**. Berikut adalah penjabaran lengkap untuk masing-masing fitur beserta rumusnya, serta hasil perhitungannya yang diterapkan pada polutan NO2 (dari `NO2_filed.csv`) yang disajikan pada hasil akhir (`NO2_Baron_TSFEL.csv`).
+Pustaka TSFEL membagi 68 fitur deret waktu menjadi tiga domain utama: **Statistik (Statistical)**, **Waktu (Temporal)**, dan **Frekuensi (Spectral)**. Berikut adalah penjabaran lengkap untuk masing-masing fitur beserta rumusnya, serta hasil perhitungannya yang diterapkan pada polutan NO2 (dari `NO2_filed.csv`) yang disajikan pada hasil akhir (`Baron_Linear.csv` pada kolom berawalan `NO2_`).
 
 ### 1. Domain Statistical
 Domain statistik mengekstrak metrik kuantitatif dan karakteristik sebaran serta bentuk distribusi dari sinyal deret waktu. Domain ini terdiri dari 17 fitur utama yang fokus pada distribusi.

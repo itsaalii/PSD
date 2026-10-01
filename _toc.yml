@@ -14,5 +14,6 @@ chapters:
   sections:
   - file: views/polutan-baron/bussiness-understanding
   - file: views/polutan-baron/data-understanding
-  - file: views/polutan-baron/preprocessing
+  - file: views/polutan-baron/interpolasi-linear
+  - file: views/polutan-baron/interpolasi-polynomial
   - file: views/polutan-baron/kmeans-clustering
