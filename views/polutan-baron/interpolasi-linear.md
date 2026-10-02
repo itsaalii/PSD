@@ -492,7 +492,7 @@ Kita akan memanfaatkan modul pustaka Python bernama `tsfel` (_Time Series Featur
 
 Untuk memastikan hasil ekstraksi bersih dan aman dari error, pada setiap iterasi polutan data akan kembali difilter dari outlier dan diinterpolasi ulang menggunakan metode `time` sebelum dilakukan komputasi fitur. Seluruh fitur dari ketiga polutan (3 × 68 = 204 fitur) kemudian digabung dalam satu baris.
 
-```{code-cell}
+```python
 import pandas as pd
 import numpy as np
 import inspect
