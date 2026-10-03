@@ -16,4 +16,4 @@ chapters:
   - file: views/polutan-baron/data-understanding
   - file: views/polutan-baron/interpolasi-linear
   - file: views/polutan-baron/interpolasi-polynomial
-  - file: views/polutan-baron/kmeans-clustering
+  - file: views/polutan-baron/kmeans-clustering-polynomial
