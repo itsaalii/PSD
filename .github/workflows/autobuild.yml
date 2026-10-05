@@ -40,6 +40,7 @@ jobs:
           pip install matplotlib
           pip install scikit-learn
           pip install seaborn
+          pip install rasterio
       - name: Build HTML Assets
         run: jupyter-book build .
       - name: Upload artifact
