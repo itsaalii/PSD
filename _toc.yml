@@ -17,3 +17,4 @@ chapters:
   - file: views/polutan-baron/interpolasi-linear
   - file: views/polutan-baron/interpolasi-polynomial
   - file: views/polutan-baron/kmeans-clustering-polynomial
+  - file: views/polutan-baron/klasifikasi-sawah
