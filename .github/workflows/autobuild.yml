@@ -43,7 +43,10 @@ jobs:
           pip install rasterio
           pip install folium
       - name: Build HTML Assets
-        run: jupyter-book build .
+        run: |
+          jupyter-book build .
+          mkdir -p _build/html/views/klasifikasi-spasial
+          cp views/klasifikasi-spasial/*.html _build/html/views/klasifikasi-spasial/ 2>/dev/null || true
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
