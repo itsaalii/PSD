@@ -18,3 +18,6 @@ chapters:
   - file: views/polutan-baron/interpolasi-polynomial
   - file: views/polutan-baron/kmeans-clustering-polynomial
   - file: views/polutan-baron/klasifikasi-sawah
+- file: views/klasifikasi-spasial/klasifikasi-jawatimur
+  sections:
+  - file: views/klasifikasi-spasial/panduan-deploy-streamlit

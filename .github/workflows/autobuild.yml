@@ -41,6 +41,7 @@ jobs:
           pip install scikit-learn
           pip install seaborn
           pip install rasterio
+          pip install folium
       - name: Build HTML Assets
         run: jupyter-book build .
       - name: Upload artifact
