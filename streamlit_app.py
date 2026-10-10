@@ -477,7 +477,7 @@ def render_peta_1():
 <div class="psd-card-header">
 <h2 class="psd-card-title">
 {heroicon(D_MAP, size=20, color="#0F766E")}
-<span>Peta 1: Evaluasi Poligon Sampel & Prediksi Data Uji (Folium Vektor)</span>
+<span>Evaluasi Poligon Sampel & Prediksi Data Uji (Folium Vektor)</span>
 </h2>
 <span class="psd-badge-teal">83 Poligon Uji Terverifikasi</span>
 </div>
@@ -500,7 +500,7 @@ def render_peta_2():
 <div class="psd-card-header">
 <h2 class="psd-card-title">
 {heroicon(D_GLOBE, size=20, color="#0F766E")}
-<span>Peta 2: Klasifikasi Tutupan Lahan Skala Regional Jawa Timur (ImageOverlay)</span>
+<span>Klasifikasi Tutupan Lahan Skala Regional Jawa Timur (ImageOverlay)</span>
 </h2>
 <span class="psd-badge-teal">Resolusi Tinggi 1536 x 896 Piksel</span>
 </div>

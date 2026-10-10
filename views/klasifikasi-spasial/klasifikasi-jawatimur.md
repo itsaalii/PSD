@@ -16,6 +16,11 @@ kernelspec:
 
 Dokumentasi ini menyajikan alur lengkap (*end-to-end pipeline*) klasifikasi spasial tutupan lahan (*Land Use / Land Cover* - LULC) skala regional di **Provinsi Jawa Timur** berbasis citra satelit optik **Sentinel-2A Level-2A (Bottom-of-Atmosphere / BOA Surface Reflectance)** dan algoritma **Random Forest Classifier**.
 
+> [!TIP]
+> **Aplikasi Web Interaktif (Streamlit Cloud)**:  
+> Seluruh visualisasi spasial, kedua peta interaktif, dan evaluasi performa model telah dideploy dan dapat diakses langsung secara publik di:  
+> 🌐 **[https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/](https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/)**
+
 Alur kerja mencakup:
 1. **Data Understanding**: Pemahaman domain 6 kelas tutupan lahan, karakteristik spektral band Sentinel-2A, formula indeks vegetasi & air, serta struktur data ground truth.
 2. **Pengambilan Data (Data Acquisition / Crawling via openEO)**: Manajemen *batch job* multi-backend pada Copernicus Data Space Ecosystem (CDSE), strategi *spatial grid tiling*, masking awan berbasis *Scene Classification Layer* (SCL), dan ekstraksi piksel GeoTIFF.
@@ -477,6 +482,11 @@ Metrik *Gini Importance* mengukur seberapa besar penurunan ketidakmurnian (*impu
 
 ## 5. Menampilkan Peta & Visualisasi Spasial
 
+> [!NOTE]
+> **Live Dashboard Streamlit**:  
+> Selain ditampilkan di dokumen ini, kedua peta interaktif (Peta Evaluasi Poligon Vektor & Peta Regional Jawa Timur) beserta filter data dan metrik evaluasi dapat dieksplorasi secara dinamis melalui web Streamlit:  
+> 🔗 **[https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/](https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/)**
+
 Dalam proyek ini, seluruh visualisasi spasial dibangun menggunakan pustaka **Folium** (berbasis *Leaflet.js*). 
 
 ### Mengapa Menggunakan Folium untuk Visualisasi Spasial?
@@ -753,8 +763,11 @@ peta
 ```{raw} html
 <div style="margin: 20px 0; border: 1px solid #d0d7de; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
     <div style="background: #f6f8fa; padding: 10px 16px; border-bottom: 1px solid #d0d7de; display: flex; justify-content: space-between; align-items: center; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; font-size: 13px;">
-        <span><b>🗺️ Peta Interaktif 1:</b> Evaluasi Poligon Sampel & Hasil Prediksi Random Forest (Folium)</span>
-        <a href="peta_klasifikasi_rf.html" target="_blank" style="color: #0969da; text-decoration: none; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid #d0d7de; border-radius: 4px;">↗ Buka Layar Penuh (Fullscreen)</a>
+        <span><b>Peta Interaktif 1:</b> Evaluasi Poligon Sampel & Hasil Prediksi Random Forest (Folium)</span>
+        <div>
+            <a href="https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/" target="_blank" style="color: #0F766E; text-decoration: none; font-weight: 600; padding: 4px 10px; background: #E7F4F2; border: 1px solid #99F6E4; border-radius: 4px; margin-right: 6px;">🚀 Buka di Web Streamlit</a>
+            <a href="peta_klasifikasi_rf.html" target="_blank" style="color: #0969da; text-decoration: none; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid #d0d7de; border-radius: 4px;">↗ Layar Penuh</a>
+        </div>
     </div>
     <iframe src="peta_klasifikasi_rf.html" width="100%" height="620px" style="border: none; display: block;"></iframe>
 </div>
@@ -960,8 +973,11 @@ peta
 ```{raw} html
 <div style="margin: 20px 0; border: 1px solid #d0d7de; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
     <div style="background: #f6f8fa; padding: 10px 16px; border-bottom: 1px solid #d0d7de; display: flex; justify-content: space-between; align-items: center; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; font-size: 13px;">
-        <span><b>🗺️ Peta Interaktif 2:</b> Klasifikasi Tutupan Lahan Skala Regional Jawa Timur (Folium ImageOverlay)</span>
-        <a href="hasil_klasifikasi_random_forest.html" target="_blank" style="color: #0969da; text-decoration: none; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid #d0d7de; border-radius: 4px;">↗ Buka Layar Penuh (Fullscreen)</a>
+        <span><b>Peta Interaktif 2:</b> Klasifikasi Tutupan Lahan Skala Regional Jawa Timur (Folium ImageOverlay)</span>
+        <div>
+            <a href="https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/" target="_blank" style="color: #0F766E; text-decoration: none; font-weight: 600; padding: 4px 10px; background: #E7F4F2; border: 1px solid #99F6E4; border-radius: 4px; margin-right: 6px;">🚀 Buka di Web Streamlit</a>
+            <a href="hasil_klasifikasi_random_forest.html" target="_blank" style="color: #0969da; text-decoration: none; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid #d0d7de; border-radius: 4px;">↗ Layar Penuh</a>
+        </div>
     </div>
     <iframe src="hasil_klasifikasi_random_forest.html" width="100%" height="640px" style="border: none; display: block;"></iframe>
 </div>
@@ -975,3 +991,4 @@ peta
 2. **Kinerja Bebas Overfitting**: Penerapan **agregasi centroid poligon** berhasil mengeliminasi *spatial autocorrelation leakage*, sehingga model memiliki kemampuan generalisasi yang kokoh pada wilayah baru.
 3. **Fitur Spektral Paling Berpengaruh**: Band **B11 (SWIR)** dengan kepentingan **19.94%** dan indeks **NDBI (16.05%)** menjadi prediktor paling krusial, menegaskan pentingnya saluran inframerah gelombang pendek dalam memisahkan kelembapan air, kerapatan vegetasi, dan perkerasan bangunan.
 4. **Visualisasi Spasial Ganda**: Implementasi visualisasi menyediakan dua perspektif yang saling melengkapi: analisis kebenaran prediksi poligon per poligon untuk verifikasi kualitas data, serta peta raster tutupan lahan skala regional seluruh Jawa Timur untuk pemantauan spasial yang aplikatif.
+5. **Aplikasi Web Terpublikasi**: Seluruh hasil klasifikasi spasial dan kedua peta interaktif telah dideploy secara daring di Streamlit Community Cloud: **[https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/](https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/)**.
