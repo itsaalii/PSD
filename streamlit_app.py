@@ -577,7 +577,7 @@ with col_fi:
 
     p_fi_img = cari_file("kinerja_kelas.png") or cari_file("kepentingan_fitur.png")
     if p_fi_img:
-        st.image(Image.open(p_fi_img), caption="Feature Importance (Gini)", use_container_width=True)
+        st.image(Image.open(p_fi_img), caption="Kinerja Klasifikasi per Kelas (Precision, Recall, F1-Score)", use_container_width=True)
     else:
         p_fi_csv = cari_file("laporan_klasifikasi.csv") or cari_file("kepentingan_fitur.csv")
         if p_fi_csv:

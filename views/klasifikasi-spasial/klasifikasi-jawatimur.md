@@ -790,6 +790,64 @@ Model KNN mencapai performa klasifikasi yang sangat tinggi pada data uji indepen
 | **Rata-rata Makro (Macro Avg)** | **0.951** | **0.938** | **0.944** | 64.430 |
 | **Rata-rata Tertimbang (Weighted Avg)** | **0.982** | **0.982** | **0.982** | 64.430 |
 
+```{image} ../../_static/kinerja_kelas.png
+:alt: Kinerja Klasifikasi per Kelas (Model KNN, k=5)
+:align: center
+:width: 90%
+```
+
+```python
+# Visualisasi Diagram Batang Kinerja per Kelas (Palet Tema Teal)
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from sklearn.metrics import classification_report
+
+labels = sorted(y_test.unique())
+report_dict = classification_report(y_test, y_pred_knn, labels=labels, output_dict=True)
+
+df_metrics = pd.DataFrame([
+    {
+        "Kelas": lbl,
+        "Precision": report_dict[lbl]["precision"] * 100,
+        "Recall": report_dict[lbl]["recall"] * 100,
+        "F1-Score": report_dict[lbl]["f1-score"] * 100
+    }
+    for lbl in labels
+])
+
+plt.figure(figsize=(9, 5.5), dpi=150)
+y_indices = np.arange(len(labels))
+bar_height = 0.25
+
+# Tiga bar bersisian dengan variasi saturasi warna teal
+plt.barh(y_indices + bar_height, df_metrics["Precision"], height=bar_height, label="Precision", color="#14B8A6")
+plt.barh(y_indices, df_metrics["Recall"], height=bar_height, label="Recall", color="#5EEAD4")
+plt.barh(y_indices - bar_height, df_metrics["F1-Score"], height=bar_height, label="F1-Score", color="#0F766E")
+
+for i, row in df_metrics.iterrows():
+    plt.text(row["F1-Score"] + 0.8, i - bar_height, f"{row['F1-Score']:.1f}%", va="center", ha="left", fontsize=8.5, fontweight="bold", color="#0F766E")
+    plt.text(row["Recall"] + 0.8, i, f"{row['Recall']:.1f}%", va="center", ha="left", fontsize=8, color="#0D9488")
+    plt.text(row["Precision"] + 0.8, i + bar_height, f"{row['Precision']:.1f}%", va="center", ha="left", fontsize=8, color="#0F766E")
+
+plt.yticks(y_indices, labels, fontsize=10, fontweight="600", color="#18232F")
+plt.xlabel("Skor Performa Evaluasi (%)", fontsize=10.5, fontweight="600", color="#334155", labelpad=8)
+plt.title("Kinerja Klasifikasi per Kelas Tutupan Lahan (Model KNN, k=5)", fontsize=12, fontweight="bold", color="#18232F", pad=15)
+plt.xlim(0, 115)
+plt.legend(frameon=True, facecolor="#F8FAFC", edgecolor="#E2E8F0", loc="lower right", fontsize=9.5)
+plt.grid(axis="x", linestyle="--", alpha=0.5, color="#CBD5E1")
+plt.gca().set_axisbelow(True)
+
+for spine in ["top", "right"]:
+    plt.gca().spines[spine].set_visible(False)
+plt.gca().spines["left"].set_color("#CBD5E1")
+plt.gca().spines["bottom"].set_color("#CBD5E1")
+
+plt.tight_layout()
+plt.savefig("kinerja_kelas.png", dpi=180, bbox_inches="tight")
+plt.show()
+```
+
 ---
 
 ### 5.2. Analisis Confusion Matrix
@@ -803,6 +861,50 @@ Matriks konfusi pada data uji menunjukkan separasi yang sangat tegas antar-kelas
 | **Laut** | 0 | 69 | 0 | **27.677** | 0 | 0 | 27.746 |
 | **Mangrove** | 0 | 77 | 118 | 1 | **8.557** | 0 | 8.753 |
 | **Sawah** | 0 | 8 | 20 | 0 | 0 | **223** | 251 |
+
+```{image} ../../_static/confusion_matrix.png
+:alt: Confusion Matrix K-Nearest Neighbors (Data Uji 64.430 Piksel)
+:align: center
+:width: 82%
+```
+
+```python
+# Visualisasi Confusion Matrix dengan Colormap Tema Teal
+import matplotlib.colors as mcolors
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+
+# Gradien tema kehijauan (Teal) selaras antarmuka Streamlit
+cmap_teal = mcolors.LinearSegmentedColormap.from_list(
+    "psd_teal_theme",
+    ["#F2F5F7", "#CCFBF1", "#2DD4BF", "#0F766E", "#0B5F58", "#042F2E"]
+)
+
+cm = confusion_matrix(y_test, y_pred_knn, labels=labels)
+cm_df = pd.DataFrame(cm, index=labels, columns=labels)
+
+plt.figure(figsize=(8, 6.2), dpi=150)
+sns.heatmap(
+    cm_df,
+    annot=True,
+    fmt='d',
+    cmap=cmap_teal,
+    cbar=True,
+    linewidths=1.2,
+    linecolor="#FFFFFF",
+    square=True,
+    annot_kws={"size": 10.5, "weight": "bold"},
+    cbar_kws={"shrink": 0.82, "label": "Jumlah Sampel Piksel"}
+)
+plt.title("Confusion Matrix - K-Nearest Neighbors (KNN, k=5)\nData Uji 64.430 Piksel", 
+          fontsize=12, fontweight="bold", color="#18232F", pad=15)
+plt.xlabel("Hasil Prediksi Model", fontsize=10.5, fontweight="600", color="#334155", labelpad=10)
+plt.ylabel("Kelas Ground Truth (Aktual)", fontsize=10.5, fontweight="600", color="#334155", labelpad=10)
+
+plt.tight_layout()
+plt.savefig("confusion_matrix.png", dpi=180, bbox_inches="tight")
+plt.show()
+```
 
 **Temuan Utama Evaluasi**:
 1. **Perairan Terbuka (Laut)** memiliki akurasi tertinggi ($99.5\%$ F1-Score) karena penyerapan total pada band NIR dan SWIR membedakannya secara sempurna dari daratan.
