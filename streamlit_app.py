@@ -650,6 +650,6 @@ else:
 # ==============================================================================
 st.markdown("""
 <footer style="margin-top:3rem; padding-top:1.5rem; border-top:1px solid #E2E8F0; text-align:center; font-size:0.8rem; color:#64748B;">
-    Proyek Sains Data &mdash; &copy; Muhammad Ali Murtadho &nbsp;|&nbsp; 2026 
+    <a href='https://instagram.com/aa.lii__'>Proyek Sains Data &mdash; &copy; Muhammad Ali Murtadho &nbsp;|&nbsp; 2026 </a> 
 </footer>
 """, unsafe_allow_html=True)
