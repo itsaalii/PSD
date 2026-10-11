@@ -247,6 +247,8 @@ def cari_file(nama_file: str) -> Path | None:
         Path("data/Klasifikasi") / nama_file,
         Path("views/klasifikasi-spasial") / nama_file,
         Path("data/Klasifikasi/hasil_rf") / nama_file,
+        Path("data/Klasifikasi/hasil_rf_piksel") / nama_file,
+        Path("data/Klasifikasi/land") / nama_file,
         Path("hasil_rf") / nama_file,
         Path("_static") / nama_file,
     ]
@@ -391,6 +393,22 @@ st.markdown(f"""
 # Muat Data Evaluasi
 p_pred = cari_file("prediksi_data_uji.csv")
 df_pred = muat_data_csv(str(p_pred)) if p_pred else None
+
+# Gabungkan koordinat centroid (latitude/langitude & longitude) ke df_pred jika belum tersedia
+if df_pred is not None and ("latitude" not in df_pred.columns or "longitude" not in df_pred.columns):
+    p_cen = cari_file("centroid_poligon.csv")
+    if p_cen:
+        df_cen = muat_data_csv(str(p_cen))
+        if df_cen is not None and "poligon_id" in df_cen.columns:
+            lat_col = "lat_centroid" if "lat_centroid" in df_cen.columns else ("lat" if "lat" in df_cen.columns else None)
+            lon_col = "lon_centroid" if "lon_centroid" in df_cen.columns else ("lon" if "lon" in df_cen.columns else None)
+            if lat_col and lon_col:
+                coords = df_cen[["poligon_id", lat_col, lon_col]].drop_duplicates("poligon_id")
+                coords = coords.rename(columns={lat_col: "latitude", lon_col: "longitude"})
+                for col_name in ["latitude", "longitude"]:
+                    if col_name in df_pred.columns:
+                        df_pred = df_pred.drop(columns=[col_name])
+                df_pred = df_pred.merge(coords, on="poligon_id", how="left")
 
 if df_pred is not None:
     n_uji = len(df_pred)
@@ -625,6 +643,10 @@ if df_pred is not None:
         df_tampil = df_tampil[df_tampil["benar"] == True]
     elif status_filter == "Hanya Salah Klasifikasi":
         df_tampil = df_tampil[df_tampil["benar"] == False]
+
+    # Tampilkan kolom poligon_id, latitude, longitude, kelas_asli, dan kelas_prediksi
+    kolom_tampil = [col for col in ["poligon_id", "latitude", "longitude", "kelas_asli", "kelas_prediksi"] if col in df_tampil.columns]
+    df_tampil = df_tampil[kolom_tampil]
 
     st.markdown(
         f"<p style='font-size:0.8rem; color:#475569; margin:0.5rem 0 0.75rem 0;'>"
