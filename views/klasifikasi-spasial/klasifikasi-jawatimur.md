@@ -23,7 +23,7 @@ Dokumentasi ini menyajikan alur lengkap (*end-to-end pipeline*) klasifikasi spas
 
 Siklus proyek disusun secara sistematis berdasarkan metodologi standar **CRISP-DM (Cross-Industry Standard Process for Data Mining)**:
 1. **Business Understanding**: Identifikasi latar belakang, urgensi pemetaan ruang, dan perumusan tujuan klasifikasi 6 kelas tutupan lahan.
-2. **Data Understanding**: Karakteristik spektral band Sentinel-2A, rekayasa indeks vegetasi dan air, eksplorasi data (EDA), dan akuisisi komposit citra via openEO CDSE.
+2. **Data Understanding**: Karakteristik spektral band Sentinel-2A, rekayasa indeks vegetasi dan air, *Data Collection / Crawling* citra via openEO CDSE (partisi grid, masking awan SCL, ekstraksi piksel), eksplorasi data (EDA), dan komposit regional Jawa Timur.
 3. **Data Preprocessing**: Seleksi fitur spektral, pemisahan data uji dan latih (*Stratified Train-Test Split* 80:20), serta standarisasi fitur (*StandardScaler*).
 4. **Modeling**: Pelatihan model *Machine Learning* K-Nearest Neighbors (KNN, $k=5$) dan pertimbangan teoritis Naive Bayes.
 5. **Evaluation**: Pengujian menyeluruh tingkat piksel (64.430 sampel uji) dan tingkat poligon (*Convex Hull* 268 poligon), matriks konfusi, serta pemetaan spasial kesalahan klasifikasi interaktif.
@@ -106,10 +106,539 @@ $$\text{NDBI} = \frac{\text{B11} - \text{B08}}{\text{B11} + \text{B08} + \epsilo
 
 *(Konstanta $\epsilon = 10^{-9}$ digunakan untuk mencegah kesalahan pembagian dengan nol).*
 
+```python
+def tambah_indeks_spektral(df: pd.DataFrame) -> pd.DataFrame:
+    eps = 1e-9
+    # NDVI: Kerapatan vegetasi hijau
+    df["NDVI"] = (df["B08"] - df["B04"]) / (df["B08"] + df["B04"] + eps)
+    # NDWI (McFeeters): Deteksi badan air permukaan
+    df["NDWI"] = (df["B03"] - df["B08"]) / (df["B03"] + df["B08"] + eps)
+    # MNDWI (Xu): Deteksi air dengan meredam pantulan bangunan
+    df["MNDWI"] = (df["B03"] - df["B11"]) / (df["B03"] + df["B11"] + eps)
+    # NDBI: Identifikasi kawasan perkerasan & permukiman
+    df["NDBI"] = (df["B11"] - df["B08"]) / (df["B11"] + df["B08"] + eps)
+    return df
+```
+
 ---
 
-### 2.4. Karakteristik Dataset Ground Truth
-Dataset hasil ekstraksi disimpan dalam file `dataset.csv`:
+### 2.4. Data Collection (Proses Crawling & Ekstraksi Piksel via openEO)
+
+Proses pengumpulan data (*Data Collection / Crawling*) dilakukan secara terotomatisasi menggunakan platform komputasi awan **Copernicus Data Space Ecosystem (CDSE) openEO** (`openeo.dataspace.copernicus.eu`). Alur ini mengunduh citra satelit multispektral **Sentinel-2A Level-2A (Bottom-of-Atmosphere / BOA Surface Reflectance)** berdasarkan batas poligon sampel ground truth, membersihkan gangguan awan tingkat piksel menggunakan pita **Scene Classification Layer (SCL)**, serta mengekstrak nilai reflektansi spektral dan indeks turunan per piksel ke dalam file `dataset.csv`.
+
+#### 2.4.1. Tahapan Utama Alur Crawling
+1. **Pemuatan Sampel Ground Truth (Shapefile Vektor)**:
+   * Memuat data batas poligon dari 6 kelas tutupan lahan: Sawah (`sawah.zip`), Bangunan (`bangunan.zip`), Hutan (`Hutan.zip`), Danau (`Danau.zip`), Laut (`laut2.zip`), dan Mangrove (`Mangrove.zip`).
+   * Mengonversi koordinat ke **WGS84 (EPSG:4326)**, memvalidasi topologi dengan `shapely.validation.make_valid`, dan memberi identifier unik `poligon_id` (misalnya `Sawah_0012`).
+2. **Partisi Spasial Grid Tiling**:
+   * Membagi wilayah sebaran poligon sampel ke dalam kisi-kisi ubin (*grid tiles*) berukuran $0.20^\circ \times 0.20^\circ$ (~22 km $\times$ 22 km atau $\sim 2.200 \times 2.200$ piksel @10m) dengan margin penyangga $0.005^\circ$ (~500 m).
+   * Hal ini bertujuan agar ukuran unduhan per request tetap optimal dan tidak melampaui batas kompleksitas openEO (*ProcessGraphComplexity Limit*).
+3. **Eksekusi Asinkron Batch Job openEO & Masking Awan SCL**:
+   * Mengunduh koleksi `SENTINEL2_L2A` periode September 2026 pada 5 band spektral optik (`B02`, `B03`, `B04`, `B08`, `B11`) dan pita `SCL`.
+   * Melakukan masking awan per-piksel: piksel bernilai SCL 1 (cacat/jenuh), 3 (bayangan awan), 8/9 (awan probabilitas sedang/tinggi), dan 10 (cirrus) disaring menjadi *NoData*:
+     $$\text{Mask Awan} = (\text{SCL} \in \{1, 3, 8, 9, 10\})$$
+   * Mengompositkan citra menggunakan nilai median temporal (`cube.median_time()`) untuk menghasilkan reflektansi permukaan tanah bebas awan.
+   * Menjalankan unduhan secara paralel menggunakan `MultiBackendJobManager` (2 job paralel simultan) dengan pelacakan database CSV `daftar_job.csv`.
+4. **Ekstraksi Piksel Berlabel & De-duplikasi**:
+   * Membaca GeoTIFF hasil unduhan per ubin dengan `rasterio`.
+   * Memotong piksel di dalam poligon sampel ground truth (`rasterio.mask.mask`).
+   * Membatasi maksimal **2.000 piksel per poligon** (`MAKS_PIKSEL_PER_POLIGON = 2000`) dengan sampling acak terstandarisasi (`np.random.default_rng(seed=42)`) guna mencegah ketimpangan kelas yang ekstrim.
+   * Membuang piksel bertabrakan/ambigu antar-kelas pada koordinat yang sama dan menghilangkan duplikasi piksel sekelas.
+   * Menghitung nilai indeks spektral (NDVI, NDWI, MNDWI, NDBI) per piksel dan mengekspor hasilnya ke `dataset.csv`.
+
+---
+
+#### 2.4.2. Kode Lengkap Pipeline Crawling 
+Berikut adalah implementasi kode lengkap (*full python script*) untuk seluruh proses crawling data satelit Sentinel-2 L2A via openEO hingga ekstraksi piksel berlabel:
+
+```python
+"""
+Sentinel-2 L2A (CDSE openEO) per-tile + ekstraksi KELAS PER PIKSEL -> CSV.
+
+Setiap baris CSV = satu piksel, dengan penanda poligon asalnya:
+  - poligon_id : ID stabil poligon, mis. "Sawah_0012" (nama kelas + nomor fitur di file sumbernya)
+  - poligon_no : nomor fitur (urutan baris) di shapefile sumber, mulai dari 0
+  - sampel_id  : indeks poligon pada GeoDataFrame gabungan (internal)
+
+Poligon sampel masuk ke SEMUA tile yang dilewatinya. Piksel di zona overlap antar-tile
+hanya diambil sekali (dimiliki sel grid-nya).
+
+Pakai (script):   python sentinel2_piksel.py
+Pakai (notebook): from sentinel2_piksel import main; main()
+"""
+
+import threading
+import time
+from datetime import datetime
+from pathlib import Path
+
+import geopandas as gpd
+import numpy as np
+import openeo
+import pandas as pd
+import rasterio
+from openeo.extra.job_management import CsvJobDatabase, MultiBackendJobManager
+from rasterio.features import rasterize
+from rasterio.mask import mask as rio_mask
+from rasterio.warp import transform as warp_transform
+from rasterio.windows import Window
+from shapely.geometry import box
+from shapely.validation import make_valid
+
+# ==============================================================================
+# KONFIGURASI
+# ==============================================================================
+SUMBER = {  # nama kelas: (file, kode label)
+    "Sawah": ("/content/drive/MyDrive/PSD/sawah.zip", 1),
+    "Bangunan": ("/content/drive/MyDrive/PSD/bangunan.zip", 2),
+    "Hutan": ("/content/drive/MyDrive/PSD/Hutan.zip", 3),
+    "Danau": ("/content/drive/MyDrive/PSD/Danau.zip", 4),
+    "Laut": ("/content/drive/MyDrive/PSD/laut2.zip", 5),
+    "Mangrove": ("/content/drive/MyDrive/PSD/Mangrove.zip", 6),
+}
+
+TILE_DEG = 0.20      # ukuran tile ~22 km (~2200 x 2200 piksel @10 m)
+BUFFER_DEG = 0.005   # margin ~500 m di sekeliling sampel
+
+TANGGAL = ["2026-09-01", "2026-09-30"]
+BANDS = ["B02", "B03", "B04", "B08", "B11"]  # Blue, Green, Red, NIR, SWIR
+PAKAI_MASK_SCL = True  # mask awan/bayangan per piksel pakai band SCL
+MAX_CLOUD = 30         # filter awan level scene (kalau PAKAI_MASK_SCL=False, pakai ~10)
+
+PARALEL = 2            # job bersamaan (akun gratis CDSE biasanya max 2)
+
+# Ekstraksi piksel
+MAKS_PIKSEL_PER_POLIGON = 2000  # None = ambil SEMUA piksel (hati-hati: poligon laut/hutan bisa jutaan -> CSV sangat besar)
+SEED = 42
+BUAT_RASTER_LABEL = True        # buat label_<tile>.tif di samping citra tiap tile
+
+OUT_DIR = Path("hasil_s2_piksel")
+JOB_DB_PATH = OUT_DIR / "daftar_job.csv"
+PETA_CSV = OUT_DIR / "peta_sampel_tile.csv"
+PIKSEL_OUT = OUT_DIR / "dataset.csv"
+
+
+# ==============================================================================
+# 1. BACA & GABUNGKAN SAMPEL
+# ==============================================================================
+def baca_semua() -> gpd.GeoDataFrame:
+    bagian = []
+    for nama, (file, label) in SUMBER.items():
+        g = gpd.read_file(file).to_crs("EPSG:4326")
+        # nomor fitur asli di file sumber (dicatat SEBELUM filter agar tetap stabil)
+        g["poligon_no"] = np.arange(len(g))
+        g = g[g.geometry.notna() & ~g.geometry.is_empty].copy()
+        g["geometry"] = g.geometry.apply(lambda x: x if x.is_valid else make_valid(x))
+        g["label_teks"] = nama
+        g["label"] = label
+        g["poligon_id"] = [f"{nama}_{n:04d}" for n in g["poligon_no"]]
+        g = g[["poligon_id", "poligon_no", "label", "label_teks", "geometry"]]
+        print(f"Jumlah sampel {nama:<9}: {len(g)}  bounds={[round(v, 3) for v in g.total_bounds]}")
+        bagian.append(g)
+
+    gdf = gpd.GeoDataFrame(pd.concat(bagian, ignore_index=True), crs="EPSG:4326")
+    print(f"Total sampel gabungan   : {len(gdf)}")
+    return gdf
+
+
+# ==============================================================================
+# 2. BAGI JADI TILE (poligon masuk ke semua sel yang dilewatinya)
+# ==============================================================================
+def buat_tile(gdf: gpd.GeoDataFrame):
+    T, B = TILE_DEG, BUFFER_DEG
+    peta, batas, sel_xy = [], {}, {}
+
+    for idx, geom in gdf.geometry.items():
+        minx, miny, maxx, maxy = geom.bounds
+        for gx in range(int(np.floor(minx / T)), int(np.floor(maxx / T)) + 1):
+            for gy in range(int(np.floor(miny / T)), int(np.floor(maxy / T)) + 1):
+                sel = box(gx * T, gy * T, (gx + 1) * T, (gy + 1) * T)
+                if not geom.intersects(sel):
+                    continue
+                bagian = geom.intersection(sel)
+                if bagian.is_empty:
+                    continue
+                b = bagian.bounds
+                tid = f"x{gx}_y{gy}"
+                peta.append({"tile_id": tid, "sampel_id": idx, "poligon_id": gdf.at[idx, "poligon_id"]})
+                sel_xy[tid] = (gx, gy)
+                if tid in batas:
+                    o = batas[tid]
+                    batas[tid] = (min(o[0], b[0]), min(o[1], b[1]), max(o[2], b[2]), max(o[3], b[3]))
+                else:
+                    batas[tid] = b
+
+    tiles = pd.DataFrame(
+        [
+            {
+                "tile_id": tid,
+                "gx": sel_xy[tid][0],
+                "gy": sel_xy[tid][1],
+                "west": b[0] - B,
+                "south": b[1] - B,
+                "east": b[2] + B,
+                "north": b[3] + B,
+            }
+            for tid, b in batas.items()
+        ]
+    )
+    peta = pd.DataFrame(peta)
+    tiles["n_sampel"] = tiles["tile_id"].map(peta.groupby("tile_id")["sampel_id"].nunique())
+
+    lebar_km = (tiles.east - tiles.west) * 111.32 * np.cos(np.radians((tiles.north + tiles.south) / 2))
+    tinggi_km = (tiles.north - tiles.south) * 110.57
+    print(f"\nJumlah tile (job)       : {len(tiles)}")
+    print(f"Ukuran tile terbesar    : {lebar_km.max():.1f} km x {tinggi_km.max():.1f} km")
+    print(f"Total area diunduh      : {(lebar_km * tinggi_km).sum():,.0f} km2")
+    return tiles, peta
+
+
+# ==============================================================================
+# 3. JALANKAN BATCH JOB PER TILE
+# ==============================================================================
+def _jam() -> str:
+    return datetime.now().strftime("%H:%M:%S")
+
+
+def start_job(row, connection, **kwargs):
+    print(f"[{_jam()}] >> Mengirim job tile {row['tile_id']} ({row.get('n_sampel', '?')} poligon)...", flush=True)
+    bbox = {
+        "west": float(row["west"]),
+        "south": float(row["south"]),
+        "east": float(row["east"]),
+        "north": float(row["north"]),
+    }
+    bands = BANDS + ["SCL"] if PAKAI_MASK_SCL else BANDS
+    cube = connection.load_collection(
+        "SENTINEL2_L2A",
+        spatial_extent=bbox,
+        temporal_extent=TANGGAL,
+        bands=bands,
+        max_cloud_cover=MAX_CLOUD,
+    )
+
+    if PAKAI_MASK_SCL:
+        scl = cube.band("SCL")
+        # 1=jenuh, 3=bayangan awan, 8/9=awan sedang/tinggi, 10=cirrus
+        mask_awan = (scl == 1) | (scl == 3) | (scl == 8) | (scl == 9) | (scl == 10)
+        cube = cube.filter_bands(BANDS).mask(mask_awan)
+
+    komposit = cube.median_time()
+    return komposit.create_job(title=f"s2_{row['tile_id']}", out_format="GTiff")
+
+
+INTERVAL_LAPOR = 30  # detik antar laporan progres di terminal
+
+
+class ManagerBerlapor(MultiBackendJobManager):
+    """Manager job yang mencetak pesan saat job selesai / gagal."""
+
+    def on_job_done(self, job, row):
+        print(f"[{_jam()}] [OK]    Tile {row['tile_id']} selesai (job {job.job_id}), mengunduh hasil...", flush=True)
+        super().on_job_done(job, row)
+        print(f"[{_jam()}] [OK]    Tile {row['tile_id']} terunduh.", flush=True)
+
+    def on_job_error(self, job, row):
+        print(f"[{_jam()}] [ERROR] Tile {row['tile_id']} gagal (job {job.job_id}). Log disimpan di folder job.", flush=True)
+        super().on_job_error(job, row)
+
+
+def _lapor_berkala(job_db, berhenti: threading.Event):
+    mulai = time.time()
+    while not berhenti.wait(INTERVAL_LAPOR):
+        try:
+            df = job_db.read()
+        except Exception:  # file sedang ditulis manager; lewati satu siklus
+            continue
+        n = len(df)
+        hitung = df["status"].value_counts().to_dict()
+        selesai = hitung.get("finished", 0)
+        gagal = sum(hitung.get(s, 0) for s in ("error", "start_failed", "skipped"))
+        jalan = hitung.get("running", 0) + hitung.get("queued", 0) + hitung.get("created", 0)
+        belum = hitung.get("not_started", 0)
+        persen = 100 * selesai / n if n else 0
+        menit = (time.time() - mulai) / 60
+        print(
+            f"[{_jam()}] Progres job: {selesai}/{n} selesai ({persen:.0f}%) | "
+            f"berjalan/antre {jalan} | belum mulai {belum} | gagal {gagal} | {menit:.1f} menit",
+            flush=True,
+        )
+
+
+def jalankan_job(tiles: pd.DataFrame, ulangi_error: bool = True):
+    OUT_DIR.mkdir(exist_ok=True)
+
+    conn = openeo.connect("openeo.dataspace.copernicus.eu")
+    conn.authenticate_oidc()
+
+    manager = ManagerBerlapor(root_dir=OUT_DIR, poll_sleep=30)
+    manager.add_backend("cdse", connection=conn, parallel_jobs=PARALEL)
+
+    job_db = CsvJobDatabase(JOB_DB_PATH)
+    if not job_db.exists():
+        job_db.initialize_from_df(tiles)
+    elif ulangi_error:
+        df = job_db.read()
+        gagal = df["status"].isin(["error", "start_failed", "skipped"])
+        if gagal.any():
+            print(f"Mengulang {int(gagal.sum())} job yang sebelumnya gagal.")
+            df.loc[gagal, "status"] = "not_started"
+            job_db.persist(df)
+
+    # thread pemantau: cetak ringkasan status job tiap INTERVAL_LAPOR detik
+    berhenti = threading.Event()
+    pemantau = threading.Thread(target=_lapor_berkala, args=(job_db, berhenti), daemon=True)
+    pemantau.start()
+    try:
+        manager.run_jobs(start_job=start_job, job_db=job_db)
+    finally:
+        berhenti.set()
+        pemantau.join(timeout=5)
+
+    df = job_db.read()
+    print("\nRingkasan status job:")
+    print(df["status"].value_counts().to_string())
+    return df
+
+
+# ==============================================================================
+# 4. EKSTRAK KELAS PER PIKSEL -> CSV
+# ==============================================================================
+def _nama_band(src) -> list:
+    desc = list(src.descriptions or [])
+    if len(desc) == src.count and all(desc) and set(BANDS) <= set(desc):
+        return desc
+    return BANDS  # asumsi urutan band sama dengan permintaan
+
+
+def _valid_mask(data, nodata, masked=None):
+    """data: (band, H, W). Piksel valid = semua band terbatas, > 0, bukan nodata."""
+    ok = np.isfinite(data).all(axis=0) & (data > 0).all(axis=0)
+    if nodata is not None and not np.isnan(nodata):
+        ok &= ~(data == nodata).any(axis=0)
+    if masked is not None:
+        ok &= ~masked
+    return ok
+
+
+def _piksel_geom(src, geom):
+    """Semua piksel valid yang pusatnya di dalam geometri.
+    Return (nilai[band, n], baris_raster, kolom_raster, x, y) dalam CRS raster, atau None."""
+    nodata = src.nodata
+
+    if geom.geom_type == "Point":
+        rr, cc = src.index(geom.x, geom.y)
+        if not (0 <= rr < src.height and 0 <= cc < src.width):
+            return None
+        data = src.read(window=Window(cc, rr, 1, 1)).astype("float64")  # (band,1,1)
+        ok = _valid_mask(data, nodata)
+        row0, col0 = rr, cc
+    else:
+        ok = None
+        for all_touched in (False, True):  # poligon sangat kecil: coba lagi dengan all_touched
+            try:
+                arr, tr = rio_mask(src, [geom], crop=True, all_touched=all_touched, filled=False)
+            except ValueError:  # tidak beririsan dengan raster
+                return None
+            data = np.ma.getdata(arr).astype("float64")
+            ok = _valid_mask(data, nodata, np.ma.getmaskarray(arr).any(axis=0))
+            row0 = int(round((tr.f - src.transform.f) / src.transform.e))
+            col0 = int(round((tr.c - src.transform.c) / src.transform.a))
+            if ok.any():
+                break
+        if ok is None or not ok.any():
+            return None
+
+    r_idx, c_idx = np.nonzero(ok)
+    if len(r_idx) == 0:
+        return None
+    nilai = data[:, r_idx, c_idx]
+    px_row, px_col = row0 + r_idx, col0 + c_idx
+    xs, ys = rasterio.transform.xy(src.transform, px_row, px_col)
+    return nilai, px_row, px_col, np.asarray(xs), np.asarray(ys)
+
+
+def tambah_indeks(df: pd.DataFrame) -> pd.DataFrame:
+    e = 1e-9
+    df["NDVI"] = (df["B08"] - df["B04"]) / (df["B08"] + df["B04"] + e)
+    df["NDWI"] = (df["B03"] - df["B08"]) / (df["B03"] + df["B08"] + e)
+    df["MNDWI"] = (df["B03"] - df["B11"]) / (df["B03"] + df["B11"] + e)
+    df["NDBI"] = (df["B11"] - df["B08"]) / (df["B11"] + df["B08"] + e)
+    return df
+
+
+def _tif_tile(r):
+    tifs = sorted(p for p in OUT_DIR.glob(f"job_{r['id']}/*.tif") if not p.name.startswith("label_"))
+    return tifs[0] if tifs else None
+
+
+def ekstrak_piksel(gdf, db, peta) -> pd.DataFrame:
+    rng = np.random.default_rng(SEED)
+    T = TILE_DEG
+    potongan = []
+    selesai = db[db["status"] == "finished"]
+    print(f"\nEkstraksi piksel dari {len(selesai)} tile yang selesai...")
+
+    total_tile = len(selesai)
+    total_piksel = 0
+    t0 = time.time()
+
+    for no_tile, (_, r) in enumerate(selesai.iterrows(), start=1):
+        tif = _tif_tile(r)
+        if tif is None:
+            print(f"  [!] File .tif tidak ditemukan untuk tile {r['tile_id']} (job {r['id']})")
+            continue
+
+        cx0, cy0 = int(r["gx"]) * T, int(r["gy"]) * T
+        ids = peta.loc[peta["tile_id"] == r["tile_id"], "sampel_id"].unique()
+        n_poli = len(ids)
+        piksel_tile = 0
+        print(f"[{_jam()}] Tile {no_tile}/{total_tile} ({r['tile_id']}): {n_poli} poligon", flush=True)
+
+        with rasterio.open(tif) as src:
+            nama_band = _nama_band(src)
+            sub_r = gdf.loc[ids].to_crs(src.crs)
+
+            for no_poli, (idx, row) in enumerate(sub_r.iterrows(), start=1):
+                if no_poli % 25 == 0 or no_poli == n_poli:
+                    print(
+                        f"    poligon {no_poli}/{n_poli} | piksel tile ini: {piksel_tile:,} | "
+                        f"total: {total_piksel:,} | {(time.time() - t0) / 60:.1f} menit",
+                        end="\r", flush=True,
+                    )
+                hasil = _piksel_geom(src, row.geometry)
+                if hasil is None:
+                    continue
+                nilai, px_row, px_col, xs, ys = hasil
+
+                lon, lat = warp_transform(src.crs, "EPSG:4326", xs.tolist(), ys.tolist())
+                lon, lat = np.asarray(lon), np.asarray(lat)
+
+                # hanya piksel yang pusatnya di dalam sel grid tile ini -> tidak ada duplikat antar-tile
+                pilih = np.flatnonzero((lon >= cx0) & (lon < cx0 + T) & (lat >= cy0) & (lat < cy0 + T))
+                if len(pilih) == 0:
+                    continue
+                if MAKS_PIKSEL_PER_POLIGON and len(pilih) > MAKS_PIKSEL_PER_POLIGON:
+                    pilih = rng.choice(pilih, MAKS_PIKSEL_PER_POLIGON, replace=False)
+
+                d = {
+                    "poligon_id": row["poligon_id"],   # penanda poligon asal
+                    "poligon_no": row["poligon_no"],
+                    "sampel_id": idx,
+                    "tile_id": r["tile_id"],
+                    "label": row["label"],
+                    "label_teks": row["label_teks"],
+                    "px_row": px_row[pilih],
+                    "px_col": px_col[pilih],
+                    "lon": lon[pilih],
+                    "lat": lat[pilih],
+                }
+                for i, nb in enumerate(nama_band):
+                    d[nb] = nilai[i, pilih]
+                potongan.append(pd.DataFrame(d))
+                piksel_tile += len(pilih)
+                total_piksel += len(pilih)
+
+        print(f"\n    -> tile {r['tile_id']} selesai: {piksel_tile:,} piksel", flush=True)
+
+    if not potongan:
+        print("Tidak ada piksel yang berhasil diekstrak.")
+        return pd.DataFrame()
+
+    df = pd.concat(potongan, ignore_index=True)
+
+    # piksel yang sama dimiliki poligon kelas berbeda = label ambigu -> dibuang
+    kunci = ["tile_id", "px_row", "px_col"]
+    ganda = df.duplicated(kunci, keep=False)
+    konflik = ganda & (df.groupby(kunci)["label"].transform("nunique") > 1)
+    if konflik.any():
+        print(f"Membuang {int(konflik.sum())} piksel dengan label bertabrakan antar-kelas.")
+    df = df[~konflik]
+
+    # piksel yang sama dimiliki >1 poligon dari kelas yang sama: simpan satu baris saja
+    # (poligon_id = poligon yang pertama memprosesnya)
+    n_sebelum = len(df)
+    df = df.drop_duplicates(kunci).reset_index(drop=True)
+    if n_sebelum != len(df):
+        print(f"Menghapus {n_sebelum - len(df)} piksel ganda (poligon sekelas yang saling tumpang tindih).")
+
+    df = tambah_indeks(df)
+
+    OUT_DIR.mkdir(exist_ok=True)
+    df.to_csv(PIKSEL_OUT, index=False)
+    print(f"\nTersimpan: {PIKSEL_OUT}")
+    print(f"Total piksel berlabel: {len(df):,}")
+    print(df.groupby("label_teks").size().to_string())
+    print(f"Jumlah poligon yang menghasilkan piksel: {df['poligon_id'].nunique()}")
+    return df
+
+
+# ==============================================================================
+# 5. (OPSIONAL) RASTER LABEL GeoTIFF SEJAJAR DENGAN CITRA TILE
+# ==============================================================================
+def buat_raster_label(gdf, db, peta):
+    """Tulis label_<tile>.tif (uint8, 0 = tanpa label) pada grid yang sama dengan citra tile."""
+    selesai = db[db["status"] == "finished"]
+    total = len(selesai)
+    for no, (_, r) in enumerate(selesai.iterrows(), start=1):
+        tif = _tif_tile(r)
+        if tif is None:
+            continue
+        print(f"[{_jam()}] Raster label {no}/{total}: tile {r['tile_id']}", flush=True)
+        ids = peta.loc[peta["tile_id"] == r["tile_id"], "sampel_id"].unique()
+        with rasterio.open(tif) as src:
+            sub_r = gdf.loc[ids].to_crs(src.crs)
+            shapes = [(g, int(l)) for g, l in zip(sub_r.geometry, sub_r["label"])]
+            lab = rasterize(
+                shapes, out_shape=(src.height, src.width), transform=src.transform,
+                fill=0, dtype="uint8",
+            )
+            profil = dict(
+                driver="GTiff", height=src.height, width=src.width, count=1, dtype="uint8",
+                crs=src.crs, transform=src.transform, nodata=0, compress="deflate",
+            )
+            keluar = tif.with_name(f"label_{r['tile_id']}.tif")
+            with rasterio.open(keluar, "w", **profil) as dst:
+                dst.write(lab, 1)
+    print("Raster label selesai (label_<tile>.tif di folder tiap job).")
+
+
+# ==============================================================================
+# MAIN
+# ==============================================================================
+def main(jalankan: bool = True, ekstrak: bool = True, ulangi_error: bool = True):
+    gdf = baca_semua()
+    tiles, peta = buat_tile(gdf)
+
+    OUT_DIR.mkdir(exist_ok=True)
+    tiles.to_csv(OUT_DIR / "rencana_tile.csv", index=False)
+    peta.to_csv(PETA_CSV, index=False)
+    # tabel referensi poligon (tanpa geometri) untuk join dengan CSV piksel
+    gdf.drop(columns="geometry").assign(
+        luas_derajat2=gdf.geometry.area
+    ).to_csv(OUT_DIR / "daftar_poligon.csv", index_label="sampel_id")
+
+    if jalankan:
+        db = jalankan_job(tiles, ulangi_error=ulangi_error)
+    else:
+        db = CsvJobDatabase(JOB_DB_PATH).read()
+
+    hasil = None
+    if ekstrak:
+        hasil = ekstrak_piksel(gdf, db, peta)
+    if BUAT_RASTER_LABEL:
+        buat_raster_label(gdf, db, peta)
+    return hasil if hasil is not None else db
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+### 2.5. Karakteristik Dataset Ground Truth (`dataset.csv`)
+Dataset hasil proses ekstraksi dan crawling di atas tersimpan dalam file `dataset.csv`:
 * **Total Baris (Piksel)**: **322.146 piksel**
 * **Total Kolom (Fitur)**: 19 kolom (metadata koordinat, band spektral asli, dan indeks turunan)
 * **Total Poligon Sampel**: **274 poligon** yang didigitasi secara cermat dari berbagai penjuru Jawa Timur.
@@ -126,7 +655,7 @@ df.head()
 
 ---
 
-### 2.5. Exploratory Data Analysis (EDA)
+### 2.6. Exploratory Data Analysis (EDA)
 Analisis eksplorasi data dilakukan untuk memverifikasi keterpisahan spektral:
 1. **Distribusi Jumlah Piksel per Kelas**: Memeriksa volume sampel untuk setiap tutupan lahan.
 2. **Distribusi Nilai NDVI**: Membuktikan bahwa kelas **Hutan** dan **Mangrove** memiliki sebaran NDVI tertinggi ($> 0.65$), **Sawah** memiliki variasi NDVI sedang-tinggi ($0.4 - 0.8$), sedangkan **Danau**, **Laut**, dan **Bangunan** memiliki NDVI terendah ($< 0.2$).
@@ -153,7 +682,7 @@ plt.show()
 
 ---
 
-### 2.6. Akuisisi Citra Skala Regional via openEO Batch Job
+### 2.7. Akuisisi Citra Skala Regional via openEO Batch Job
 Untuk memetakan klasifikasi skala regional satu provinsi utuh, digunakan platform **openEO CDSE** (`openeo.dataspace.copernicus.eu`). Karena batas geografis Jawa Timur ($110.89^\circ - 114.63^\circ\text{ E}$, $-8.84^\circ - -6.65^\circ\text{ S}$) pada resolusi asli melebihi batas sinkron ($> 20.000 \times 20.000$ piksel), proses unduhan dijalankan menggunakan **Batch Job Asinkron** dengan resolusi agregasi spasial $0.0025^\circ$ (~250 meter):
 
 ```python
