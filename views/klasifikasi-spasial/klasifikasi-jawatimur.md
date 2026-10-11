@@ -643,10 +643,10 @@ Dataset hasil proses ekstraksi dan crawling di atas tersimpan dalam file `datase
 * **Total Kolom (Fitur)**: 19 kolom (metadata koordinat, band spektral asli, dan indeks turunan)
 * **Total Poligon Sampel**: **274 poligon** yang didigitasi secara cermat dari berbagai penjuru Jawa Timur.
 
-```python
+```{code-cell}
 # Memuat dataset pada notebook
 import pandas as pd
-df = pd.read_csv('dataset.csv')
+df = pd.read_csv('../../data/Klasifikasi/land/dataset.csv')
 
 print(f"Jumlah baris (piksel): {df.shape[0]}")
 print(f"Jumlah kolom (fitur): {df.shape[1]}")
@@ -660,7 +660,7 @@ Analisis eksplorasi data dilakukan untuk memverifikasi keterpisahan spektral:
 1. **Distribusi Jumlah Piksel per Kelas**: Memeriksa volume sampel untuk setiap tutupan lahan.
 2. **Distribusi Nilai NDVI**: Membuktikan bahwa kelas **Hutan** dan **Mangrove** memiliki sebaran NDVI tertinggi ($> 0.65$), **Sawah** memiliki variasi NDVI sedang-tinggi ($0.4 - 0.8$), sedangkan **Danau**, **Laut**, dan **Bangunan** memiliki NDVI terendah ($< 0.2$).
 
-```python
+```{code-cell}
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -713,7 +713,7 @@ job.get_results().download_file("jatim_250m.tif")
 
 ### 3.1. Penentuan Fitur dan Pembersihan Data
 Fitur prediktor mencakup 5 band spektral asli dan 4 indeks spektral:
-```python
+```{code-cell}
 fitur = ['B02', 'B03', 'B04', 'B08', 'B11', 'NDVI', 'NDWI', 'MNDWI', 'NDBI']
 
 df_bersih = df.dropna(subset=fitur + ['label_teks']).copy()
@@ -730,7 +730,7 @@ Dataset dibagi menggunakan skema *Stratified Split* dengan rasio 80% data latih 
 Karena algoritma KNN sangat bertumpu pada perhitungan jarak Euclidean (L2-norm), fitur dengan skala rentang nilai besar (misal band mentah $0 - 10000$) akan mendominasi fitur dengan skala kecil (indeks ternormalisasi $-1$ s.d. $+1$). Oleh karena itu, standarisasi wajib dilakukan:
 $$z = \frac{x - \mu}{\sigma}$$
 
-```python
+```{code-cell}
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
@@ -753,7 +753,7 @@ Algoritma KNN mengklasifikasikan data baru berdasarkan kedekatan jarak fitur den
 * **Metrik Jarak**: Euclidean Distance ($p=2$)
 * **Bobot Suara**: *Uniform voting* (setiap tetangga terdekat memiliki bobot suara yang sama)
 
-```python
+```{code-cell}
 from sklearn.neighbors import KNeighborsClassifier
 
 knn_model = KNeighborsClassifier(n_neighbors=5)
@@ -790,13 +790,8 @@ Model KNN mencapai performa klasifikasi yang sangat tinggi pada data uji indepen
 | **Rata-rata Makro (Macro Avg)** | **0.951** | **0.938** | **0.944** | 64.430 |
 | **Rata-rata Tertimbang (Weighted Avg)** | **0.982** | **0.982** | **0.982** | 64.430 |
 
-```{image} ../../_static/kinerja_kelas.png
-:alt: Kinerja Klasifikasi per Kelas (Model KNN, k=5)
-:align: center
-:width: 90%
-```
 
-```python
+```{code-cell}
 # Visualisasi Diagram Batang Kinerja per Kelas (Palet Tema Teal)
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -862,14 +857,9 @@ Matriks konfusi pada data uji menunjukkan separasi yang sangat tegas antar-kelas
 | **Mangrove** | 0 | 77 | 118 | 1 | **8.557** | 0 | 8.753 |
 | **Sawah** | 0 | 8 | 20 | 0 | 0 | **223** | 251 |
 
-```{image} ../../_static/confusion_matrix.png
-:alt: Confusion Matrix K-Nearest Neighbors (Data Uji 64.430 Piksel)
-:align: center
-:width: 82%
-```
 
-```python
-# Visualisasi Confusion Matrix dengan Colormap Tema Teal
+
+```{code-cell}
 import matplotlib.colors as mcolors
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
@@ -1022,7 +1012,7 @@ for label_str, hex_color in colors.items():
     ImageOverlay(image=rgba_img, bounds=img_bounds, opacity=0.65, name=f"Sebaran {label_str}").add_to(m2)
 
 folium.LayerControl(collapsed=False).add_to(m2)
-m2.save("hasil_klasifikasi_random_forest.html")
+m2.save("hasil_klasifikasi_knn.html")
 ```
 
 ```{raw} html
