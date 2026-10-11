@@ -928,11 +928,6 @@ Untuk mengevaluasi kehandalan model pada level entitas geografis, hasil prediksi
 ### 5.4. Peta Interaktif 1: Evaluasi Poligon Ground Truth (Folium Vektor)
 Poligon direkonstruksi dari kumpulan koordinat titik sampel menggunakan algoritma *Convex Hull*. 
 
-Fitur Peta 1:
-* **Palet Warna Standar GIS**: Lapisan poligon diwarnai sesuai 6 kelas tutupan lahan.
-* **Sorotan Poligon Salah Klasifikasi**: Ditandai dengan garis putus-putus *rose crimson* (`#E11D48`) dan bulatan tanda seru (`!`) di titik centroid poligon.
-* **Hint Estetik Saat Hover**: Saat kursor diarahkan ke tanda seru, kotak tooltip modern (*border-free*, tanpa outline, bayangan lembut) muncul secara instan menampilkan ID Poligon, Kelas Aktual, Hasil Prediksi, dan Akurasi Piksel Uji.
-
 ```python
 # Pembuatan Peta Evaluasi Poligon (Cell 13 pada notebook)
 import folium
@@ -962,7 +957,19 @@ m1.save("peta_klasifikasi_rf.html")
 ```{raw} html
 <div style="margin: 20px 0; border: 1px solid #d0d7de; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
     <div style="background: #f6f8fa; padding: 10px 16px; border-bottom: 1px solid #d0d7de; display: flex; justify-content: space-between; align-items: center; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; font-size: 13px;">
-        <span>Evaluasi Poligon Sampel & Sorotan Salah Klasifikasi</span>
+        <div>
+            <b style="color: #18232F;">Peta 1: Evaluasi Poligon Sampel & Sorotan Salah Klasifikasi</b>
+            <div style="font-size: 11.5px; color: #475569; margin-top: 3px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+                <span><b>Legenda:</b></span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #FFD92F; border-radius: 2px; display: inline-block;"></span> Sawah</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #E41A1C; border-radius: 2px; display: inline-block;"></span> Bangunan</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #2E7D32; border-radius: 2px; display: inline-block;"></span> Hutan</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #4FC3F7; border-radius: 2px; display: inline-block;"></span> Danau</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #0D47A1; border-radius: 2px; display: inline-block;"></span> Laut</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #8E44AD; border-radius: 2px; display: inline-block;"></span> Mangrove</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px; color: #E11D48; font-weight: 600;"><span style="width: 13px; height: 13px; background: #E11D48; color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800;">!</span> Salah Klasifikasi</span>
+            </div>
+        </div>
         <div>
             <a href="https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/" target="_blank" style="color: #0F766E; text-decoration: none; font-weight: 600; padding: 4px 10px; background: #E7F4F2; border: 1px solid #99F6E4; border-radius: 4px; margin-right: 6px;">Buka di Web Streamlit</a>
             <a href="peta_klasifikasi_rf.html" target="_blank" style="color: #0969da; text-decoration: none; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid #d0d7de; border-radius: 4px;">↗ Layar Penuh</a>
@@ -1018,13 +1025,24 @@ m2.save("hasil_klasifikasi_knn.html")
 ```{raw} html
 <div style="margin: 20px 0; border: 1px solid #d0d7de; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
     <div style="background: #f6f8fa; padding: 10px 16px; border-bottom: 1px solid #d0d7de; display: flex; justify-content: space-between; align-items: center; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; font-size: 13px;">
-        <span>Klasifikasi Tutupan Lahan Skala Regional Jawa Timur</span>
+        <div>
+            <b style="color: #18232F;">Peta 2: Klasifikasi Tutupan Lahan Skala Regional Jawa Timur</b>
+            <div style="font-size: 11.5px; color: #475569; margin-top: 3px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+                <span><b>Legenda:</b></span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #FFD92F; border-radius: 2px; display: inline-block;"></span> Sawah</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #E41A1C; border-radius: 2px; display: inline-block;"></span> Bangunan</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #2E7D32; border-radius: 2px; display: inline-block;"></span> Hutan</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #4FC3F7; border-radius: 2px; display: inline-block;"></span> Danau</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #0D47A1; border-radius: 2px; display: inline-block;"></span> Laut</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: #8E44AD; border-radius: 2px; display: inline-block;"></span> Mangrove</span>
+            </div>
+        </div>
         <div>
             <a href="https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/" target="_blank" style="color: #0F766E; text-decoration: none; font-weight: 600; padding: 4px 10px; background: #E7F4F2; border: 1px solid #99F6E4; border-radius: 4px; margin-right: 6px;">Buka di Web Streamlit</a>
-            <a href="hasil_klasifikasi_random_forest.html" target="_blank" style="color: #0969da; text-decoration: none; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid #d0d7de; border-radius: 4px;">↗ Layar Penuh</a>
+            <a href="hasil_klasifikasi_knn.html" target="_blank" style="color: #0969da; text-decoration: none; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid #d0d7de; border-radius: 4px;">↗ Layar Penuh</a>
         </div>
     </div>
-    <iframe src="hasil_klasifikasi_random_forest.html" width="100%" height="640px" style="border: none; display: block;"></iframe>
+    <iframe src="hasil_klasifikasi_knn.html" width="100%" height="640px" style="border: none; display: block;"></iframe>
 </div>
 ```
 
