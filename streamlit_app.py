@@ -464,47 +464,6 @@ st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 # ==============================================================================
 # 7. VISUALISASI KEDUA PETA INTERAKTIF
 # ==============================================================================
-# Bar Legenda Global Tutupan Lahan
-st.markdown(f"""
-<div class="psd-card" style="margin-bottom:1.25rem; padding:0.85rem 1.25rem;">
-    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.75rem;">
-        <div style="display:flex; align-items:center; gap:0.45rem; font-size:0.85rem; font-weight:700; color:#18232F;">
-            {heroicon(D_TAG, size=18, color="#0F766E")}
-            <span>Legenda Tutupan Lahan:</span>
-        </div>
-        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:1.15rem; font-size:0.8rem;">
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-                <span style="width:12px; height:12px; border-radius:3px; background:#FFD92F; display:inline-block; border:1px solid #CBD5E1;"></span>
-                <span style="font-weight:600; color:#1E293B;">Sawah</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-                <span style="width:12px; height:12px; border-radius:3px; background:#E41A1C; display:inline-block; border:1px solid #CBD5E1;"></span>
-                <span style="font-weight:600; color:#1E293B;">Bangunan</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-                <span style="width:12px; height:12px; border-radius:3px; background:#2E7D32; display:inline-block; border:1px solid #CBD5E1;"></span>
-                <span style="font-weight:600; color:#1E293B;">Hutan</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-                <span style="width:12px; height:12px; border-radius:3px; background:#4FC3F7; display:inline-block; border:1px solid #CBD5E1;"></span>
-                <span style="font-weight:600; color:#1E293B;">Danau</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-                <span style="width:12px; height:12px; border-radius:3px; background:#0D47A1; display:inline-block; border:1px solid #CBD5E1;"></span>
-                <span style="font-weight:600; color:#1E293B;">Laut</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-                <span style="width:12px; height:12px; border-radius:3px; background:#8E44AD; display:inline-block; border:1px solid #CBD5E1;"></span>
-                <span style="font-weight:600; color:#1E293B;">Mangrove</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.4rem; padding-left:0.6rem; border-left:1px solid #E2E8F0;">
-                <span style="width:15px; height:15px; border-radius:50%; background:#E11D48; color:#FFFFFF; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; line-height:1; box-shadow:0 1px 3px rgba(225,29,72,0.4);">!</span>
-                <span style="color:#E11D48; font-weight:700;">Salah Klasifikasi</span>
-            </div>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
 
 file_peta1 = cari_file("peta_klasifikasi_rf.html")
 file_peta2 = cari_file("hasil_klasifikasi_knn.html") or cari_file("hasil_klasifikasi_random_forest.html")
