@@ -341,7 +341,7 @@ m1.save("peta_klasifikasi_rf.html")
 ```{raw} html
 <div style="margin: 20px 0; border: 1px solid #d0d7de; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
     <div style="background: #f6f8fa; padding: 10px 16px; border-bottom: 1px solid #d0d7de; display: flex; justify-content: space-between; align-items: center; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; font-size: 13px;">
-        <span><b>Peta Interaktif 1:</b> Evaluasi Poligon Sampel & Sorotan Salah Klasifikasi (Folium Vektor)</span>
+        <span>Evaluasi Poligon Sampel & Sorotan Salah Klasifikasi</span>
         <div>
             <a href="https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/" target="_blank" style="color: #0F766E; text-decoration: none; font-weight: 600; padding: 4px 10px; background: #E7F4F2; border: 1px solid #99F6E4; border-radius: 4px; margin-right: 6px;">Buka di Web Streamlit</a>
             <a href="peta_klasifikasi_rf.html" target="_blank" style="color: #0969da; text-decoration: none; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid #d0d7de; border-radius: 4px;">↗ Layar Penuh</a>
@@ -397,7 +397,7 @@ m2.save("hasil_klasifikasi_random_forest.html")
 ```{raw} html
 <div style="margin: 20px 0; border: 1px solid #d0d7de; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
     <div style="background: #f6f8fa; padding: 10px 16px; border-bottom: 1px solid #d0d7de; display: flex; justify-content: space-between; align-items: center; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; font-size: 13px;">
-        <span><b>Peta Interaktif 2:</b> Klasifikasi Tutupan Lahan Skala Regional Jawa Timur (Folium ImageOverlay)</span>
+        <span>Klasifikasi Tutupan Lahan Skala Regional Jawa Timur</span>
         <div>
             <a href="https://klasifikasi-spasial-tutupan-lahan-jawatimur.streamlit.app/" target="_blank" style="color: #0F766E; text-decoration: none; font-weight: 600; padding: 4px 10px; background: #E7F4F2; border: 1px solid #99F6E4; border-radius: 4px; margin-right: 6px;">Buka di Web Streamlit</a>
             <a href="hasil_klasifikasi_random_forest.html" target="_blank" style="color: #0969da; text-decoration: none; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid #d0d7de; border-radius: 4px;">↗ Layar Penuh</a>
