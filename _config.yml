@@ -42,5 +42,6 @@ sphinx:
     html_css_files:
       - custom.css
     html_extra_path:
+      - extra_assets
       - views/klasifikasi-spasial/peta_klasifikasi_rf.html
       - views/klasifikasi-spasial/hasil_klasifikasi_random_forest.html

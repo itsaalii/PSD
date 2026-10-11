@@ -1,0 +1,7 @@
+,pred_Bangunan,pred_Danau,pred_Hutan,pred_Laut,pred_Mangrove,pred_Sawah
+asli_Bangunan,404,83,42,0,0,0
+asli_Danau,58,22042,452,227,122,2
+asli_Hutan,13,189,17767,0,94,24
+asli_Laut,0,129,0,41490,0,0
+asli_Mangrove,0,146,186,2,12796,0
+asli_Sawah,5,10,40,0,0,321

@@ -1,6 +1,6 @@
 """
 Dashboard Klasifikasi Spasial Tutupan Lahan (LULC) Jawa Timur
-Berbasis Sentinel-2A Level-2A & Algoritma Random Forest
+Berbasis Sentinel-2A Level-2A & Algoritma K-Nearest Neighbors (KNN)
 
 Styling: Tailwind CSS Native (Scoped Pure CSS, Immune to Script Stripping & Markdown Code Indentation)
 Palet Warna: https://psd-interpolasi.basisdata2-c.my.id/
@@ -283,7 +283,7 @@ with st.sidebar:
         <h2 style="font-size:1.05rem; font-weight:700; color:#18232F; margin:0;">Spasial LULC</h2>
     </div>
     <div style="font-size:0.8rem; color:#475569; padding-bottom:1rem; border-bottom:1px solid #E2E8F0; line-height:1.6;">
-        <p style="margin:0;"><b style="color:#18232F;">Model:</b> Random Forest Classifier</p>
+        <p style="margin:0;"><b style="color:#18232F;">Model:</b> K-Nearest Neighbors (KNN, k=5)</p>
         <p style="margin:0;"><b style="color:#18232F;">Sensor:</b> Sentinel-2A MSI (ESA CDSE)</p>
         <p style="margin:0;"><b style="color:#18232F;">Koleksi:</b> Level-2A BOA Surface Reflectance</p>
     </div>
@@ -378,12 +378,12 @@ st.markdown(f"""
             </h1>
         </div>
         <p style="font-size:0.875rem; color:#475569; margin:0.35rem 0 0 0; max-width:48rem; line-height:1.5;">
-            Visualisasi spasial berbasis citra satelit Sentinel-2A Level-2A dan algoritma Random Forest untuk pemetaan 6 kelas tutupan lahan di seluruh wilayah Provinsi Jawa Timur.
+            Visualisasi spasial berbasis citra satelit Sentinel-2A Level-2A dan algoritma K-Nearest Neighbors (KNN) untuk pemetaan 6 kelas tutupan lahan di seluruh wilayah Provinsi Jawa Timur.
         </p>
     </div>
     <div class="psd-badge-teal" style="font-size:0.8rem; padding:0.4rem 0.85rem;">
         {heroicon(D_SATELLITE, size=16, color="#0F766E")}
-        <span>Sentinel-2A MSI BOA &bull; Random Forest</span>
+        <span>Sentinel-2A MSI BOA &bull; K-Nearest Neighbors</span>
     </div>
 </header>
 """, unsafe_allow_html=True)
@@ -416,7 +416,7 @@ with col_m1:
 <span class="metric-num">{akurasi:.1f}%</span>
 <span class="psd-badge-teal">{n_benar}/{n_uji} Poligon</span>
 </div>
-<div class="metric-sub">Evaluasi Stratified Test Set (Random Forest)</div>
+<div class="metric-sub">Evaluasi Stratified Test Set (K-Nearest Neighbors)</div>
 </div>""", unsafe_allow_html=True)
 
 with col_m2:
@@ -426,7 +426,7 @@ with col_m2:
 <span style="background:#E7F4F2; border-radius:50%; padding:0.3rem; display:inline-flex;">{heroicon(D_SCALE, size=18, color="#0F766E")}</span>
 </div>
 <div class="metric-val-row">
-<span class="metric-num">0.963</span>
+<span class="metric-num">0.944</span>
 <span class="psd-badge-teal">Seimbang</span>
 </div>
 <div class="metric-sub">Rata-rata harmonik seluruh 6 kelas tutupan lahan</div>
@@ -439,10 +439,10 @@ with col_m3:
 <span style="background:#E7F4F2; border-radius:50%; padding:0.3rem; display:inline-flex;">{heroicon(D_LAYERS, size=18, color="#0F766E")}</span>
 </div>
 <div class="metric-val-row">
-<span class="metric-num">~300</span>
+<span class="metric-num">274</span>
 <span class="psd-badge-slate">6 Kategori</span>
 </div>
-<div class="metric-sub">Ekstraksi fitur tingkat poligon (bebas autokorelasi)</div>
+<div class="metric-sub">Rekonstruksi Convex Hull dari 322.146 piksel</div>
 </div>""", unsafe_allow_html=True)
 
 with col_m4:
@@ -453,9 +453,9 @@ with col_m4:
 </div>
 <div class="metric-val-row">
 <span class="metric-num">{n_salah}</span>
-<span class="psd-badge-amber">Error 3.6%</span>
+<span class="psd-badge-amber">Error 3.4%</span>
 </div>
-<div class="metric-sub">Hanya pada kemiripan spektral air Danau/Laut</div>
+<div class="metric-sub">9 poligon salah prediksi mayoritas (Akurasi 96.6%)</div>
 </div>""", unsafe_allow_html=True)
 
 st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
@@ -479,13 +479,11 @@ def render_peta_1():
 {heroicon(D_MAP, size=20, color="#0F766E")}
 <span>Evaluasi Poligon Sampel & Prediksi Data Uji (Folium Vektor)</span>
 </h2>
-<span class="psd-badge-teal">83 Poligon Uji Terverifikasi</span>
+<span class="psd-badge-teal">268 Poligon Uji Terverifikasi</span>
 </div>
 <div style="font-size:0.8rem; color:#475569; line-height:1.5;">
 Menampilkan seluruh poligon sampel dari 6 kelas tutupan lahan. 
-<b style="color:#0D47A1;">Garis tepi biru:</b> poligon data uji. 
-<b style="color:#D97706;">Garis putus-putus oranye + ikon seru:</b> poligon yang salah diprediksi. 
-Klik poligon untuk melihat nilai spektral NDVI, NDWI, dan keyakinan model.
+Menampilkan seluruh poligon sampel dari 6 kelas tutupan lahan. Poligon yang salah klasifikasi ditandai dengan garis putus-putus merah dan badge tanda seru (!). Hover pada tanda seru untuk melihat kelas aktual vs hasil prediksi model.
 </div>
 </div>""", unsafe_allow_html=True)
     if konten_peta1:
@@ -502,11 +500,10 @@ def render_peta_2():
 {heroicon(D_GLOBE, size=20, color="#0F766E")}
 <span>Klasifikasi Tutupan Lahan Skala Regional Jawa Timur (ImageOverlay)</span>
 </h2>
-<span class="psd-badge-teal">Resolusi Tinggi 1536 x 896 Piksel</span>
+<span class="psd-badge-teal">Komposit Sentinel-2A openEO (~250m)</span>
 </div>
 <div style="font-size:0.8rem; color:#475569; line-height:1.5;">
-Inferensi spasial per piksel (~200m/piksel) menutupi seluruh wilayah Jawa Timur berpadu dengan citra satelit 
-<b>Esri World Imagery (zoom level 10)</b> dengan opasitas 65% dan pembatasan batas daratan provinsi.
+Inferensi spasial per piksel skala regional se-Jawa Timur berbasis citra Sentinel-2A L2A openEO (resolusi 250m) dan model K-Nearest Neighbors (KNN) berpadu dengan citra satelit Esri World Imagery (zoom level 8-10).
 </div>
 </div>""", unsafe_allow_html=True)
     if konten_peta2:
@@ -546,7 +543,7 @@ st.markdown(f"""<div class="psd-card" style="margin-bottom:1rem;">
 {heroicon(D_CHART_BAR, size=20, color="#0F766E")}
 <span>Evaluasi Kinerja Model & Kontribusi Fitur Spektral</span>
 </h2>
-<span class="psd-badge-teal">Random Forest Gini Importance</span>
+<span class="psd-badge-teal">K-Nearest Neighbors (k=5)</span>
 </div>
 </div>""", unsafe_allow_html=True)
 
@@ -554,7 +551,7 @@ col_cm, col_fi = st.columns(2)
 
 with col_cm:
     st.markdown("""<div class="psd-card" style="margin-bottom:0.75rem;">
-<h3 style="font-size:0.95rem; font-weight:600; color:#18232F; margin:0 0 0.35rem 0;">Confusion Matrix (Data Uji 83 Poligon)</h3>
+<h3 style="font-size:0.95rem; font-weight:600; color:#18232F; margin:0 0 0.35rem 0;">Confusion Matrix (Data Uji 64.430 Piksel)</h3>
 <p style="font-size:0.8rem; color:#64748B; margin:0 0 0.75rem 0;">Perbandingan kelas ground truth aktual vs hasil prediksi model.</p>
 </div>""", unsafe_allow_html=True)
 
@@ -569,27 +566,27 @@ with col_cm:
             st.info("File confusion matrix belum tersedia.")
 
     st.markdown("""<div class="psd-card" style="font-size:0.75rem; color:#64748B; margin-top:0.5rem; line-height:1.4;">
-<b>Analisis Matriks:</b> Akurasi mencapai 96.4%. Seluruh poligon Bangunan, Mangrove, dan Sawah terklasifikasi 100% sempurna tanpa salah.
+<b>Analisis Matriks:</b> Akurasi piksel mencapai 98.18% (akurasi poligon 96.6%). Sebagian besar kekeliruan terjadi pada batas Danau/Laut dan vegetasi lebat Sawah/Hutan.
 </div>""", unsafe_allow_html=True)
 
 with col_fi:
     st.markdown("""<div class="psd-card" style="margin-bottom:0.75rem;">
-<h3 style="font-size:0.95rem; font-weight:600; color:#18232F; margin:0 0 0.35rem 0;">Tingkat Kepentingan Fitur Spektral (Gini)</h3>
-<p style="font-size:0.8rem; color:#64748B; margin:0 0 0.75rem 0;">Kontribusi relatif band citra optik dan indeks spektral dalam memisahkan tutupan lahan.</p>
+<h3 style="font-size:0.95rem; font-weight:600; color:#18232F; margin:0 0 0.35rem 0;">Kinerja Klasifikasi per Kelas (F1-Score)</h3>
+<p style="font-size:0.8rem; color:#64748B; margin:0 0 0.75rem 0;">Metrik F1-Score model KNN pada 6 kelas tutupan lahan data uji.</p>
 </div>""", unsafe_allow_html=True)
 
-    p_fi_img = cari_file("kepentingan_fitur.png")
+    p_fi_img = cari_file("kinerja_kelas.png") or cari_file("kepentingan_fitur.png")
     if p_fi_img:
         st.image(Image.open(p_fi_img), caption="Feature Importance (Gini)", use_container_width=True)
     else:
-        p_fi_csv = cari_file("kepentingan_fitur.csv")
+        p_fi_csv = cari_file("laporan_klasifikasi.csv") or cari_file("kepentingan_fitur.csv")
         if p_fi_csv:
             st.dataframe(pd.read_csv(p_fi_csv), use_container_width=True)
         else:
             st.info("File feature importance belum tersedia.")
 
     st.markdown("""<div class="psd-card" style="font-size:0.75rem; color:#64748B; margin-top:0.5rem; line-height:1.4;">
-<b>Temuan Fitur:</b> Band SWIR (B11) dan NDBI memegang peranan paling penting dalam membedakan kawasan terbangun beton dari vegetasi dan perairan.
+<b>Performa Kelas:</b> Kelas Laut (99.5%), Mangrove (98.0%), dan Hutan (97.2%) memiliki F1-Score sangat tinggi berkat karakteristik spektral air dan inframerah yang kuat.
 </div>""", unsafe_allow_html=True)
 
 
@@ -641,7 +638,7 @@ if df_pred is not None:
     st.download_button(
         label="Unduh Data Hasil Prediksi (CSV)",
         data=csv_bytes,
-        file_name="prediksi_data_uji_rf.csv",
+        file_name="prediksi_data_uji_knn.csv",
         mime="text/csv"
     )
 else:
@@ -653,6 +650,6 @@ else:
 # ==============================================================================
 st.markdown("""
 <footer style="margin-top:3rem; padding-top:1.5rem; border-top:1px solid #E2E8F0; text-align:center; font-size:0.8rem; color:#64748B;">
-    Proyek Sains Data &mdash; Klasifikasi Spasial LULC Jawa Timur &bull; Sentinel-2A Level-2A & Random Forest
+    Proyek Sains Data &mdash; Klasifikasi Spasial LULC Jawa Timur &bull; Sentinel-2A Level-2A & K-Nearest Neighbors (KNN)
 </footer>
 """, unsafe_allow_html=True)

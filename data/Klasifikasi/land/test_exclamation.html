@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_c6ff018b4adb1c54fcce6e9e07106ea4 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_c6ff018b4adb1c54fcce6e9e07106ea4" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_c6ff018b4adb1c54fcce6e9e07106ea4 = L.map(
+                "map_c6ff018b4adb1c54fcce6e9e07106ea4",
+                {
+                    center: [-7.5, 112.0],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 12,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_cae6ca16f9781474fd809c40f650425c = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_cae6ca16f9781474fd809c40f650425c.addTo(map_c6ff018b4adb1c54fcce6e9e07106ea4);
+        
+    
+            var marker_7361b34561f32cf3d64e79628de81a0f = L.marker(
+                [-7.5, 112.0],
+                {
+}
+            ).addTo(map_c6ff018b4adb1c54fcce6e9e07106ea4);
+        
+    
+            var div_icon_8be6c2a13bc6637da49239a7192a5e20 = L.divIcon({
+  "html": "\n\u003cdiv style=\"width: 24px; height: 24px; background: #E11D48; border-radius: 50%;\n            display: flex; align-items: center; justify-content: center;\n            color: white; font-family: -apple-system, BlinkMacSystemFont, \u0027Segoe UI\u0027, Roboto, sans-serif;\n            font-size: 14px; font-weight: 800; box-shadow: 0 4px 10px rgba(225, 29, 72, 0.45);\n            cursor: pointer; border: 2px solid #FFFFFF;\"\u003e\n    !\n\u003c/div\u003e\n",
+  "iconSize": [24, 24],
+  "iconAnchor": [12, 12],
+  "className": "empty",
+});
+        
+    
+            marker_7361b34561f32cf3d64e79628de81a0f.bindTooltip(
+                `<div>
+                     
+<div style="min-width: 175px;">
+    <div style="font-weight: 700; font-size: 13px; color: #FFFFFF; margin-bottom: 6px; letter-spacing: 0.2px;">
+        Bangunan_0003
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <span style="color: #94A3B8; font-size: 11px;">Kelas Aktual</span>
+        <span style="background: rgba(16, 185, 129, 0.2); color: #34D399; padding: 1px 7px; border-radius: 4px; font-weight: 600; font-size: 11px;">
+            Bangunan
+        </span>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="color: #94A3B8; font-size: 11px;">Prediksi Model</span>
+        <span style="background: rgba(244, 63, 94, 0.2); color: #FB7185; padding: 1px 7px; border-radius: 4px; font-weight: 600; font-size: 11px;">
+            Danau
+        </span>
+    </div>
+    <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 4px; font-size: 11px; color: #CBD5E1; display: flex; justify-content: space-between;">
+        <span>Akurasi Piksel Uji</span>
+        <span style="font-weight: 600;">0/2 (0%)</span>
+    </div>
+</div>
+
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_7361b34561f32cf3d64e79628de81a0f.setIcon(div_icon_8be6c2a13bc6637da49239a7192a5e20);
+            
+</script>
+</html>
