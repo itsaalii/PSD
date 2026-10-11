@@ -148,7 +148,7 @@ Proses pengumpulan data (*Data Collection / Crawling*) dilakukan secara terotoma
 
 ---
 
-#### 2.4.2. Kode Lengkap Pipeline Crawling 
+#### 2.4.2. Kode Lengkap Pipeline Crawling
 Berikut adalah implementasi kode lengkap (*full python script*) untuk seluruh proses crawling data satelit Sentinel-2 L2A via openEO hingga ekstraksi piksel berlabel:
 
 ```python
