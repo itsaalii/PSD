@@ -28,7 +28,7 @@ Aplikasi siap dijalankan di file:
 2. **🌏 Tab 2: Peta Regional Seluruh Jawa Timur (High-Res Raster)**:
    - Menampilkan `hasil_klasifikasi_random_forest.html` (Cell 7 notebook).
    - Resolusi tinggi ~1536 x 896 piksel (~200m per piksel) menutupi seluruh provinsi Jawa Timur.
-   - Citra satelit Esri World Imagery (z=10) tertanam dengan layer klasifikasi semi-transparan (opasitas 65%).
+   - Citra satelit Esri World Imagery (z=10) tertanam dengan layer klasifikasi (opasitas 100%).
 3. **📊 Tab 3: Evaluasi Model & Feature Importance**:
    - Menampilkan gambar & tabel Confusion Matrix (akurasi 96.4%).
    - Menampilkan gambar & tabel Gini Feature Importance (dominansi band SWIR B11 dan NDBI).

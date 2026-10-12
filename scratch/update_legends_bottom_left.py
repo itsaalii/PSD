@@ -104,7 +104,7 @@ legenda_peta_2 = """<div style="
         </div>
     </div>
     <div style="border-top: 1px solid #E2E8F0; margin-top: 6px; padding-top: 5px; font-size: 10px; color: #64748B;">
-        <span>Opasitas Layer: 65%</span>
+        <span>Opasitas Layer: 100%</span>
     </div>
 </div>"""
 

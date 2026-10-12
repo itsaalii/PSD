@@ -977,7 +977,7 @@ Peta kedua memetakan inferensi per piksel skala regional se-Jawa Timur dari citr
 Fitur Peta 2:
 * **Basemap Satelit Stabil**: Menggunakan **Esri World Imagery** dan **OpenStreetMap** bebas dari kendala pemblokiran URL.
 * **Lapisan Klasifikasi Terpisah (*Toggleable*)**: Masing-masing kelas tutupan lahan dijadikan layer `ImageOverlay` tersendiri, sehingga pengguna dapat memfilter sebaran Sawah, Bangunan, atau Hutan secara independen melalui panel kontrol di pojok kanan atas.
-* **Opasitas Transparan Semu**: Disetel pada opasitas $65\%$ sehingga bentang relief muka bumi asli tetap terlihat di bawah hasil klasifikasi.
+* **Opasitas Penuh (100%)**: Disetel pada opasitas $100\%$ sehingga hasil klasifikasi tutupan lahan tertampil solid, tegas, dan kontras di atas peta dasar.
 
 ```python
 # Pembuatan Peta Regional (Cell 14 pada notebook)
@@ -1003,10 +1003,10 @@ folium.TileLayer(
 ).add_to(m2)
 folium.TileLayer("OpenStreetMap", name="OpenStreetMap", overlay=False).add_to(m2)
 
-# Buat ImageOverlay transparan per kelas tutupan lahan
+# Buat ImageOverlay per kelas tutupan lahan (opasitas 100%)
 for label_str, hex_color in colors.items():
-    # ... susun array RGBA untuk kelas bersangkutan ...
-    ImageOverlay(image=rgba_img, bounds=img_bounds, opacity=0.8, name=f"Sebaran {label_str}").add_to(m2)
+    # ... susun array RGBA untuk kelas bersangkutan (alpha=255) ...
+    ImageOverlay(image=rgba_img, bounds=img_bounds, opacity=1.0, name=f"Sebaran {label_str}").add_to(m2)
 
 folium.LayerControl(collapsed=False).add_to(m2)
 m2.save("hasil_klasifikasi_knn.html")

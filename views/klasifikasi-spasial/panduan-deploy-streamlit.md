@@ -304,7 +304,7 @@ with tab2:
         <b>Karakteristik Peta Regional:</b>
         <ul>
             <li><b>Resolusi Tinggi Granular:</b> Grid inferensi 1536 x 896 piksel (~200m per piksel) seluruh Jawa Timur.</li>
-            <li><b>Esri Satellite Mosaic (z=10):</b> Citra satelit tertanam dengan lapisan prediksi transparan (opasitas 65%).</li>
+            <li><b>Esri Satellite Mosaic (z=10):</b> Citra satelit tertanam dengan lapisan prediksi (opasitas 100%).</li>
             <li><b>Masking Daratan:</b> Menggunakan batas provinsi Jawa Timur untuk membedakan daratan dan laut terbuka.</li>
         </ul>
     </div>
