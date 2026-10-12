@@ -694,7 +694,7 @@ bbox_jatim = {"west": 110.89, "south": -8.84, "east": 114.63, "north": -6.65}
 cube = connection.load_collection(
     "SENTINEL2_L2A",
     spatial_extent=bbox_jatim,
-    temporal_extent=["2024-08-01", "2024-08-31"],
+    temporal_extent=["2026-08-01", "2026-08-31"],
     bands=['B02', 'B03', 'B04', 'B08', 'B11'],
     max_cloud_cover=30
 )
