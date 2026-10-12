@@ -1006,7 +1006,7 @@ folium.TileLayer("OpenStreetMap", name="OpenStreetMap", overlay=False).add_to(m2
 # Buat ImageOverlay transparan per kelas tutupan lahan
 for label_str, hex_color in colors.items():
     # ... susun array RGBA untuk kelas bersangkutan ...
-    ImageOverlay(image=rgba_img, bounds=img_bounds, opacity=0.65, name=f"Sebaran {label_str}").add_to(m2)
+    ImageOverlay(image=rgba_img, bounds=img_bounds, opacity=0.8, name=f"Sebaran {label_str}").add_to(m2)
 
 folium.LayerControl(collapsed=False).add_to(m2)
 m2.save("hasil_klasifikasi_knn.html")
